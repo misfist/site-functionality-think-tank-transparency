@@ -30,6 +30,7 @@ class Donor_Type extends Taxonomy {
 		'slug'              => 'access',
 		'post_types'        => array(
 			'donor',
+			'transaction'
 		),
 		'hierarchical'      => true,
 		'public'            => true,
