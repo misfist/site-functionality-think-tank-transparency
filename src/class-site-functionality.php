@@ -20,6 +20,7 @@ use Site_Functionality\Common\WP_Includes\I18n;
 use Site_Functionality\App\Custom_Fields\Custom_Fields;
 use Site_Functionality\App\Post_Types\Post_Types;
 use Site_Functionality\App\Taxonomies\Taxonomies;
+use Site_Functionality\Integrations\Integrations;
 
 /**
  * Hooks the plugin's classes to WordPress's actions and filters.
@@ -110,6 +111,7 @@ class Site_Functionality {
 		$taxonomies     = new Taxonomies( $this->settings );
 		$custom_fields  = new Custom_Fields( $this->settings );
 		$admin_settings = new Admin_Settings( $this->settings );
+		$integrations   = new Integrations( $this->settings );
 	}
 
 }
