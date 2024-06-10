@@ -38,7 +38,7 @@ class Donor extends Post_Type {
 			'page-attributes',
 			'custom-fields',
 		),
-		'menu_position' => 20,
+		'menu_position' => 25,
 	);
 
 	/**
@@ -48,6 +48,31 @@ class Donor extends Post_Type {
 	 */
 	public function init(): void {
 		parent::init();
+
+		$this->data['fields'] = array(
+			array(
+				'label' => __( 'Parent Donor', 'site-functionality' ),
+				'key'   => 'parent_donor',
+				'type'  => 'string',
+			),
+			array(
+				'label' => __( 'Donor Type', 'site-functionality' ),
+				'key'   => 'donor_type',
+				'type'  => 'string',
+			),
+			array(
+				'label'        => __( 'Import ID', 'site-functionality' ),
+				'key'          => 'import_id',
+				'type'         => 'integer',
+				'show_in_rest' => false,
+			),
+			array(
+				'label'        => __( 'Import Parent ID', 'site-functionality' ),
+				'key'          => 'import_parent_id',
+				'type'         => 'integer',
+				'show_in_rest' => false,
+			),
+		);
 
 		\add_action( 'init', array( $this, 'register_meta' ) );
 		\add_action( 'acf/init', array( $this, 'register_fields' ) );
@@ -65,7 +90,20 @@ class Donor extends Post_Type {
 	 *
 	 * @return void
 	 */
-	public function register_meta(): void {}
+	public function register_meta(): void {
+		foreach ( $this->data['fields'] as $key => $field ) {
+			register_post_meta(
+				self::POST_TYPE['id'],
+				$field['key'],
+				array(
+					'type'         => $field['type'],
+					'description'  => $field['label'],
+					'single'       => true,
+					'show_in_rest' => ( isset( $field['show_in_rest'] ) ) ? $field['show_in_rest'] : true,
+				)
+			);
+		}
+	}
 
 	/**
 	 * Register custom query vars

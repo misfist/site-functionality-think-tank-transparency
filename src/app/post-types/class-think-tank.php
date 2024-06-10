@@ -34,7 +34,7 @@ class Think_Tank extends Post_Type {
 			'title',
 			'custom-fields',
 		),
-		'menu_position' => 9,
+		'menu_position' => 20,
 	);
 
 	/**
@@ -44,6 +44,31 @@ class Think_Tank extends Post_Type {
 	 */
 	public function init(): void {
 		parent::init();
+
+		$this->data['fields'] = array(
+			array(
+				'label' => __( 'Transparency Score', 'site-functionality' ),
+				'key'   => 'transparency_score',
+				'type'  => 'integer',
+			),
+			array(
+				'label' => __( 'Transparency Notes', 'site-functionality' ),
+				'key'   => 'transparency_notes',
+				'type'  => 'string',
+			),
+			array(
+				'label'        => __( 'Internal Notes', 'site-functionality' ),
+				'key'          => 'internal_notes',
+				'type'         => 'string',
+				'show_in_rest' => false,
+			),
+			array(
+				'label'        => __( 'Import ID', 'site-functionality' ),
+				'key'          => 'import_id',
+				'type'         => 'integer',
+				'show_in_rest' => false,
+			),
+		);
 
 		\add_action( 'init', array( $this, 'register_meta' ) );
 		\add_action( 'acf/init', array( $this, 'register_fields' ) );
