@@ -1,0 +1,30 @@
+{
+	"name": "site-functionality",
+	"version": "1.0.0",
+	"description": "Custom blocks.",
+	"license": "GPL-2.0-or-later",
+	"main": "build/index.js",
+	"scripts": {
+		"build": "wp-scripts build",
+		"format": "wp-scripts format",
+		"lint:css": "wp-scripts lint-style",
+		"lint:js": "wp-scripts lint-js",
+		"start": "wp-scripts start",
+		"packages-update": "wp-scripts packages-update"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@wordpress/api-fetch": "^5.2.3",
+		"@wordpress/block-editor": "^7.0.0",
+		"@wordpress/blocks": "^11.0.0",
+		"@wordpress/i18n": "^4.2.1",
+		"@wordpress/primitives": "^3.0.2",
+		"@wordpress/scripts": "^17.1.0",
+		"currency-symbol-map": "^5.0.1",
+		"dotenv-webpack": "^7.0.3",
+		"lodash.startcase": "^4.4.0",
+		"react": "^17.0.2",
+		"react-dom": "^17.0.2",
+		"uuid": "^8.3.2"
+	}
+}

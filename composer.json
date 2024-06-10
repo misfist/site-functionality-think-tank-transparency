@@ -1,0 +1,85 @@
+{
+    "name": "misfist/site-functionality",
+    "description": "Custom plugin for WordPress project.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0+-or-later",
+    "authors": [
+        {
+            "name": "Pea",
+            "email": "pea@misfist.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "process-timeout": 0,
+        "sort-packages": true,
+        "allow-plugins": {
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "alleyinteractive/composer-wordpress-autoloader": true
+        },
+        "optimize-autoloader": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Site_Functionality\\": "src/"
+        },
+        "classmap": [
+            "src"
+        ],
+        "psr-0": {
+            "Site_Functionality\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Site_Functionality\\": [
+                "tests/integration",
+                "tests/unit",
+                "tests/wpunit"
+            ]
+        }
+    },
+    "repositories": {
+        "composer/composer": {
+            "type": "composer",
+            "url": "https://wpackagist.org",
+            "only": [
+                "wpackagist-plugin/*",
+                "wpackagist-theme/*"
+            ]
+        }
+    },
+    "require": {},
+    "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "*",
+        "kporras07/composer-symlinks": "dev-master",
+        "phpcompatibility/phpcompatibility-wp": "*",
+        "squizlabs/php_codesniffer": "*",
+        "wp-cli/dist-archive-command": "dev-main",
+        "wp-cli/i18n-command": "^2.4",
+        "wp-cli/wp-cli-bundle": "*",
+        "wp-coding-standards/wpcs": "*"
+    },
+    "scripts": {
+        "lint": [
+            "vendor/bin/phpcbf || true",
+            "vendor/bin/phpcs || true",
+            "vendor/bin/phpstan analyse --memory-limit 1G"
+        ],
+        "lint-changes": [
+            "updated_files=$( git status | grep 'modified:\\s.*.php$' | cut -c14- | awk '{ printf(\"%s \", $0) }' ); vendor/bin/phpcbf $(echo $updated_files); vendor/bin/phpcs $(echo $updated_files); vendor/bin/phpstan analyse $(echo $updated_files) --memory-limit 1G"
+        ],
+        "php-compatibility": [
+            "vendor/bin/phpcs -p src templates  --standard=PHPCompatibilityWP --runtime-set testVersion 7.4-"
+        ],
+        "create-plugin-archive": [
+            "vendor/bin/wp i18n make-pot src languages/$(basename \"$PWD\").pot --domain=$(basename \"$PWD\")",
+            "vendor/bin/wp dist-archive . ./dist-archive --plugin-dirname=$(basename \"$PWD\") --create-target-dir"
+        ]
+    }
+}
