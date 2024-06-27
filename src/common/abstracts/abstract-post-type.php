@@ -106,6 +106,9 @@ abstract class Post_Type extends Base {
 		if ( isset( static::POST_TYPE['template'] ) && ! empty( static::POST_TYPE['template'] ) ) {
 			$args['template'] = static::POST_TYPE['template'];
 		}
+		if ( isset( static::POST_TYPE['capabilities'] ) && ! empty( static::POST_TYPE['capabilities'] ) ) {
+			$args['capabilities'] = static::POST_TYPE['capabilities'];
+		}
 
 		\register_post_type(
 			static::POST_TYPE['id'],
