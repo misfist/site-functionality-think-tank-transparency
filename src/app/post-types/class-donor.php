@@ -37,7 +37,9 @@ class Donor extends Post_Type {
 			'title',
 			'page-attributes',
 			'custom-fields',
+			'editor',
 		),
+		// 'capabilities'  => array( 'create_posts' => false ),
 		'menu_position' => 25,
 	);
 
@@ -76,6 +78,8 @@ class Donor extends Post_Type {
 
 		\add_action( 'init', array( $this, 'register_meta' ) );
 		\add_action( 'acf/init', array( $this, 'register_fields' ) );
+		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
+		\add_filter( 'post_type_link', array( $this, 'redirect_to_parent' ), 10, 2 );
 	}
 
 	/**
@@ -114,6 +118,56 @@ class Donor extends Post_Type {
 	 */
 	public function register_query_vars( $vars ): array {
 		return $vars;
+	}
+
+	/**
+	 * Add rewrite ruules
+	 *
+	 * @see https://developer.wordpress.org/reference/functions/add_rewrite_rule/
+	 *
+	 * @return void
+	 */
+	public function rewrite_rules() : void {
+		add_rewrite_tag( '%donor%', '([^&]+)' );
+		add_rewrite_tag( '%think-tank%', '([^&]+)' );
+		add_rewrite_tag( '%type%', '([^&]+)' );
+
+		$regex = self::POST_TYPE['slug'] . '/([a-z0-9-]+)[/]?$';
+
+		add_rewrite_rule( $regex, 'index.php?food=$matches[1]', 'top' );
+	}
+
+	/**
+	 * Set Post Order
+	 *
+	 * @see https://developer.wordpress.org/reference/hooks/pre_get_posts/
+	 *
+	 * @param  [type] $query
+	 * @return void
+	 */
+	public function post_order( $query ) {
+		if ( ! is_admin() && $query->is_main_query() ) {
+			if ( is_post_type_archive( self::POST_TYPE['id'] ) ) {
+				$query->set( 'orderby', 'title' );
+				$query->set( 'order', 'ASC' );
+			}
+		}
+	}
+
+	/**
+	 * Modify permalink to parent
+	 * 
+	 * @link https://developer.wordpress.org/reference/hooks/post_type_link/
+	 *
+	 * @param  string $permalink
+	 * @param  object \WP_Post $post
+	 * @return string
+	 */
+	function redirect_to_parent( $permalink, $post ) : string {
+		if( 'donor' === $post->post_type && $post->post_parent ) {
+			$permalink = get_permalink( $post->post_parent );
+		}
+		return $permalink;
 	}
 
 }

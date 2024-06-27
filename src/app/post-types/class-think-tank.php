@@ -21,7 +21,7 @@ class Think_Tank extends Post_Type {
 	 */
 	public const POST_TYPE = array(
 		'id'            => 'think_tank',
-		'slug'          => 'think_tank',
+		'slug'          => 'think-tank',
 		'menu'          => 'Think Tanks',
 		'title'         => 'Think Tanks',
 		'singular'      => 'Think Tank',
@@ -33,7 +33,9 @@ class Think_Tank extends Post_Type {
 		'supports'      => array(
 			'title',
 			'custom-fields',
+			'editor',
 		),
+		// 'capabilities'  => array( 'create_posts' => false ),
 		'menu_position' => 20,
 	);
 
@@ -72,6 +74,7 @@ class Think_Tank extends Post_Type {
 
 		\add_action( 'init', array( $this, 'register_meta' ) );
 		\add_action( 'acf/init', array( $this, 'register_fields' ) );
+		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
 	}
 
 	/**
@@ -97,6 +100,23 @@ class Think_Tank extends Post_Type {
 	 */
 	public function register_query_vars( $vars ): array {
 		return $vars;
+	}
+
+	/**
+	 * Set Post Order
+	 * 
+	 * @see https://developer.wordpress.org/reference/hooks/pre_get_posts/
+	 *
+	 * @param  [type] $query
+	 * @return void
+	 */
+	public function post_order( $query ) {
+		if ( ! is_admin() && $query->is_main_query() ) {
+			if( is_post_type_archive( self::POST_TYPE['id'] ) ) {
+				$query->set( 'orderby', 'title' );
+				$query->set( 'order', 'ASC' );
+			}
+		}
 	}
 
 }

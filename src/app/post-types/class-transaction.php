@@ -8,6 +8,8 @@
 namespace Site_Functionality\App\Post_Types;
 
 use Site_Functionality\Common\Abstracts\Post_Type;
+use Site_Functionality\App\Post_Types\Donor;
+use Site_Functionality\App\Post_Types\Think_Tank;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -36,6 +38,7 @@ class Transaction extends Post_Type {
 		'supports'      => array(
 			'custom-fields',
 		),
+		// 'capabilities'  => array( 'create_posts' => false ),
 		'menu_position' => 25,
 	);
 
@@ -141,6 +144,17 @@ class Transaction extends Post_Type {
 
 		\add_action( 'init', array( $this, 'register_meta' ) );
 		\add_action( 'acf/init', array( $this, 'register_fields' ) );
+		\add_action( 'mb_relationships_init', array( $this, 'register_relationships' ) );
+		// \add_action( 'pre_get_posts', array( $this, 'post_order' ) );
+
+		\add_filter( 'wpdatatables_filter_mysql_query', function( $query, $tableId ) {
+			global $post;
+			$title = get_post_field( 'post_title', $post );
+			// AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council'
+			// $query = str_replace( ' LIMIT', " AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council' LIMIT", $query );
+			// var_dump( $query );
+			return $query;
+		}, '', 2 );
 
 	}
 
@@ -149,7 +163,14 @@ class Transaction extends Post_Type {
 	 *
 	 * @return void
 	 */
-	public function register_fields(): void {
+	public function register_fields(): void {}
+
+	/**
+	 * Register Meta
+	 *
+	 * @return void
+	 */
+	public function register_meta(): void {
 		foreach ( $this->data['fields'] as $key => $field ) {
 			register_post_meta(
 				self::POST_TYPE['id'],
@@ -165,11 +186,66 @@ class Transaction extends Post_Type {
 	}
 
 	/**
-	 * Register Meta
+	 * Register Post Relationships
+	 *
+	 * @see https://docs.metabox.io/extensions/mb-relationships/
 	 *
 	 * @return void
 	 */
-	public function register_meta(): void {}
+	public function register_relationships() : void {
+		$transaction_think_tank = array(
+			'id'         => self::POST_TYPE['rest_base'] . '_to_' . Think_Tank::POST_TYPE['rest_base'],
+			'from'       => array(
+				'object_type'  => 'post',
+				'post_type'    => self::POST_TYPE['id'],
+				'admin_filter' => true,
+				'admin_column' => array(
+					'position' => 'after title',
+					'link'     => 'view',
+					'title'    => Think_Tank::POST_TYPE['singular'],
+				),
+			),
+			'to'         => array(
+				'object_type'  => 'post',
+				'post_type'    => Think_Tank::POST_TYPE['id'],
+				'admin_filter' => true,
+				'admin_column' => array(
+					'position' => 'after title',
+					'link'     => 'view',
+					'title'    => self::POST_TYPE['title'],
+				),
+			),
+			'reciprocal' => true,
+		);
+		\MB_Relationships_API::register( $transaction_think_tank );
+
+		$transaction_donor = array(
+			'id'         => self::POST_TYPE['rest_base'] . '_to_' . Donor::POST_TYPE['rest_base'],
+			'from'       => array(
+				'object_type'  => 'post',
+				'post_type'    => self::POST_TYPE['id'],
+				'admin_filter' => true,
+				'admin_column' => array(
+					'position' => 'after title',
+					'link'     => 'view',
+					'title'    => Donor::POST_TYPE['singular'],
+				),
+			),
+			'to'         => array(
+				'object_type'  => 'post',
+				'post_type'    => Donor::POST_TYPE['id'],
+				'admin_filter' => true,
+				'admin_column' => array(
+					'position' => 'after title',
+					'link'     => 'view',
+					'title'    => self::POST_TYPE['title'],
+				),
+			),
+			'reciprocal' => true,
+		);
+		\MB_Relationships_API::register( $transaction_donor );
+
+	}
 
 	/**
 	 * Register custom query vars
@@ -181,5 +257,15 @@ class Transaction extends Post_Type {
 	public function register_query_vars( $vars ): array {
 		return $vars;
 	}
+
+	/**
+	 * Set Post Order
+	 *
+	 * @see https://developer.wordpress.org/reference/hooks/pre_get_posts/
+	 *
+	 * @param  object \WP_Query $query
+	 * @return void
+	 */
+	public function post_order( $query ) {}
 
 }
