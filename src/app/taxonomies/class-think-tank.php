@@ -16,32 +16,31 @@ use Site_Functionality\Common\Abstracts\Taxonomy;
  * @package Site_Functionality\App\Taxonomies
  * @since 1.0.0
  */
-class Donor_Type extends Taxonomy {
+class Think_Tank extends Taxonomy {
 
 	/**
 	 * Taxonomy data
 	 */
 	public const TAXONOMY = array(
-		'id'                => 'donor_type',
-		'singular_name'     => 'Donor Type',
-		'name'              => 'Donor Types',
-		'menu_name'         => 'Donor Types',
-		'plural'            => 'Donor Types',
-		'slug'              => 'donor-type',
+		'id'                => 'think_tank',
+		'singular_name'     => 'Think Tank',
+		'name'              => 'Think Tanks',
+		'menu_name'         => 'Think Tanks',
+		'plural'            => 'Think Tanks',
+		'slug'              => 'think-tank',
 		'post_types'        => array(
-			'transaction',
-			'donor'
+			'transaction'
 		),
-		'hierarchical'      => true,
+		'hierarchical'      => false,
 		'public'            => true,
 		'show_ui'           => true,
 		'show_admin_column' => true,
 		'show_in_nav_menus' => false,
 		'show_tagcloud'     => false,
 		'show_in_rest'      => true,
-		'has_archive'       => false,
+		'has_archive'       => true,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'donor-types',
+		'rest_base'         => 'think-tanks',
 	);
 
 	/**
@@ -77,10 +76,7 @@ class Donor_Type extends Taxonomy {
 			if ( is_tax( self::TAXONOMY['id'] ) ) {
 				// $query->set( 'orderby', 'title' );
 				// $query->set( 'order', 'ASC' );
-				$query->set( 'post_type', 'donor' );
-				$query->set( 'groupby', 'parent' );
-				$query->set( 'orderby', 'title' );
-				$query->set( 'order', 'ASC' );
+				$query->set( 'post_type', 'transaction' );
 			}
 		}
 	}

@@ -16,32 +16,31 @@ use Site_Functionality\Common\Abstracts\Taxonomy;
  * @package Site_Functionality\App\Taxonomies
  * @since 1.0.0
  */
-class Donor_Type extends Taxonomy {
+class Year extends Taxonomy {
 
 	/**
 	 * Taxonomy data
 	 */
 	public const TAXONOMY = array(
-		'id'                => 'donor_type',
-		'singular_name'     => 'Donor Type',
-		'name'              => 'Donor Types',
-		'menu_name'         => 'Donor Types',
-		'plural'            => 'Donor Types',
-		'slug'              => 'donor-type',
+		'id'                => 'donation_year',
+		'singular_name'     => 'Year',
+		'name'              => 'Years',
+		'menu_name'         => 'Years',
+		'plural'            => 'Years',
+		'slug'              => 'y',
 		'post_types'        => array(
-			'transaction',
-			'donor'
+			'transaction'
 		),
-		'hierarchical'      => true,
+		'hierarchical'      => false,
 		'public'            => true,
 		'show_ui'           => true,
 		'show_admin_column' => true,
 		'show_in_nav_menus' => false,
 		'show_tagcloud'     => false,
 		'show_in_rest'      => true,
-		'has_archive'       => false,
+		'has_archive'       => true,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'donor-types',
+		'rest_base'         => 'years',
 	);
 
 	/**
@@ -52,7 +51,7 @@ class Donor_Type extends Taxonomy {
 	public function init(): void {
 		parent::init();
 
-		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
+		// \add_action( 'pre_get_posts', array( $this, 'post_order' ) );
 	}
 
 	/**
@@ -72,17 +71,6 @@ class Donor_Type extends Taxonomy {
 	 * @param  obj \WP_Query $query
 	 * @return void
 	 */
-	public function post_order( $query ) {
-		if ( ! is_admin() && $query->is_main_query() ) {
-			if ( is_tax( self::TAXONOMY['id'] ) ) {
-				// $query->set( 'orderby', 'title' );
-				// $query->set( 'order', 'ASC' );
-				$query->set( 'post_type', 'donor' );
-				$query->set( 'groupby', 'parent' );
-				$query->set( 'orderby', 'title' );
-				$query->set( 'order', 'ASC' );
-			}
-		}
-	}
+	public function post_order( $query ) {}
 	
 }

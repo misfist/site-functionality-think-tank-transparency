@@ -8,7 +8,10 @@
 namespace Site_Functionality\App\Taxonomies;
 
 use Site_Functionality\Common\Abstracts\Base;
+use Site_Functionality\App\Taxonomies\Donor;
 use Site_Functionality\App\Taxonomies\Donor_Type;
+use Site_Functionality\App\Taxonomies\Think_Tank;
+use Site_Functionality\App\Taxonomies\Year;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -33,7 +36,10 @@ class Taxonomies extends Base {
 	 * @return void
 	 */
 	public function init(): void {
+		new Donor( $this->settings );
 		new Donor_Type( $this->settings );
+		new Think_Tank( $this->settings );
+		new Year( $this->settings );
 	}
 
 }

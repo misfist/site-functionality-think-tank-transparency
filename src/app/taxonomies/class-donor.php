@@ -16,21 +16,20 @@ use Site_Functionality\Common\Abstracts\Taxonomy;
  * @package Site_Functionality\App\Taxonomies
  * @since 1.0.0
  */
-class Donor_Type extends Taxonomy {
+class Donor extends Taxonomy {
 
 	/**
 	 * Taxonomy data
 	 */
 	public const TAXONOMY = array(
-		'id'                => 'donor_type',
-		'singular_name'     => 'Donor Type',
-		'name'              => 'Donor Types',
-		'menu_name'         => 'Donor Types',
-		'plural'            => 'Donor Types',
-		'slug'              => 'donor-type',
+		'id'                => 'donor',
+		'singular_name'     => 'Donor',
+		'name'              => 'Donors',
+		'menu_name'         => 'Donors',
+		'plural'            => 'Donors',
+		'slug'              => 'donor',
 		'post_types'        => array(
-			'transaction',
-			'donor'
+			'transaction'
 		),
 		'hierarchical'      => true,
 		'public'            => true,
@@ -39,9 +38,9 @@ class Donor_Type extends Taxonomy {
 		'show_in_nav_menus' => false,
 		'show_tagcloud'     => false,
 		'show_in_rest'      => true,
-		'has_archive'       => false,
+		'has_archive'       => true,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'donor-types',
+		'rest_base'         => 'donors',
 	);
 
 	/**
@@ -77,10 +76,7 @@ class Donor_Type extends Taxonomy {
 			if ( is_tax( self::TAXONOMY['id'] ) ) {
 				// $query->set( 'orderby', 'title' );
 				// $query->set( 'order', 'ASC' );
-				$query->set( 'post_type', 'donor' );
-				$query->set( 'groupby', 'parent' );
-				$query->set( 'orderby', 'title' );
-				$query->set( 'order', 'ASC' );
+				$query->set( 'post_type', 'transaction' );
 			}
 		}
 	}
