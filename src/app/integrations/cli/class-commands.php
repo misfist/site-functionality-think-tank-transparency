@@ -6,6 +6,10 @@
  */
 namespace Site_Functionality\Integrations\CLI;
 
+if( ! class_exists( '\WP_CLI' ) ) {
+	return;
+}
+
 use \WP_CLI as WP_CLI;
 use function \WP_CLI\Utils\make_progress_bar;
 use function \WP_CLI\Utils\get_flag_value;
