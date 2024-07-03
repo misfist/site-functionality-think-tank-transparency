@@ -53,7 +53,7 @@ class Transaction extends Post_Type {
 		$this->data['fields'] = array(
 			array(
 				'label' => __( 'Donor', 'site-functionality' ),
-				'key'   => 'donor',
+				'key'   => 'specific_donor',
 				'type'  => 'string',
 			),
 			array(
@@ -69,7 +69,7 @@ class Transaction extends Post_Type {
 			array(
 				'label' => __( 'Year', 'site-functionality' ),
 				'key'   => 'year',
-				'type'  => 'integer',
+				'type'  => 'string',
 			),
 			array(
 				'label' => __( 'Actual', 'site-functionality' ),
@@ -99,12 +99,17 @@ class Transaction extends Post_Type {
 			array(
 				'label' => __( 'Source Notes', 'site-functionality' ),
 				'key'   => 'source_notes',
-				'type'  => 'integer',
+				'type'  => 'string',
 			),
 			array(
 				'label' => __( 'Disclosed', 'site-functionality' ),
 				'key'   => 'disclosed',
 				'type'  => 'boolean',
+			),
+			array(
+				'label' => __( 'Donor Heirarchy', 'site-functionality' ),
+				'key'   => 'donor_heirarchy',
+				'type'  => 'string',
 			),
 			array(
 				'label'        => __( 'Analyzed By', 'site-functionality' ),
@@ -131,14 +136,16 @@ class Transaction extends Post_Type {
 				'show_in_rest' => false,
 			),
 			array(
-				'label' => __( 'Donor ID', 'site-functionality' ),
-				'key'   => 'donor_id',
-				'type'  => 'integer',
+				'label'        => __( 'Donor ID', 'site-functionality' ),
+				'key'          => 'donor_id',
+				'type'         => 'integer',
+				'show_in_rest' => false,
 			),
 			array(
-				'label' => __( 'Think Tank ID', 'site-functionality' ),
-				'key'   => 'think_tank_id',
-				'type'  => 'integer',
+				'label'        => __( 'Think Tank ID', 'site-functionality' ),
+				'key'          => 'think_tank_id',
+				'type'         => 'integer',
+				'show_in_rest' => false,
 			),
 		);
 
@@ -147,14 +154,19 @@ class Transaction extends Post_Type {
 		\add_action( 'mb_relationships_init', array( $this, 'register_relationships' ) );
 		// \add_action( 'pre_get_posts', array( $this, 'post_order' ) );
 
-		\add_filter( 'wpdatatables_filter_mysql_query', function( $query, $tableId ) {
-			global $post;
-			$title = get_post_field( 'post_title', $post );
-			// AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council'
-			// $query = str_replace( ' LIMIT', " AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council' LIMIT", $query );
-			// var_dump( $query );
-			return $query;
-		}, '', 2 );
+		\add_filter(
+			'wpdatatables_filter_mysql_query',
+			function( $query, $tableId ) {
+				global $post;
+				$title = get_post_field( 'post_title', $post );
+				// AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council'
+				// $query = str_replace( ' LIMIT', " AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council' LIMIT", $query );
+				// var_dump( $query );
+				return $query;
+			},
+			'',
+			2
+		);
 
 	}
 

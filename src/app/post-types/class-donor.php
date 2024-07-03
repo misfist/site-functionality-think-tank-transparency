@@ -37,7 +37,7 @@ class Donor extends Post_Type {
 			'title',
 			'page-attributes',
 			'custom-fields',
-			'editor',
+			// 'editor',
 		),
 		// 'capabilities'  => array( 'create_posts' => false ),
 		'menu_position' => 25,
@@ -61,6 +61,82 @@ class Donor extends Post_Type {
 				'label' => __( 'Donor Type', 'site-functionality' ),
 				'key'   => 'donor_type',
 				'type'  => 'string',
+			),
+			array(
+				'label'        => __( 'Transactions', 'site-functionality' ),
+				'key'          => 'transactions',
+				'single'       => true,
+				'type'         => 'object',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Cumulative Amount', 'site-functionality' ),
+				'key'          => 'amount_cumulative',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Cumulative Min Amount', 'site-functionality' ),
+				'key'          => 'amount_min_cumulative',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Cumulative Max Amount', 'site-functionality' ),
+				'key'          => 'amount_max_cumulative',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Cumulative Actual + Min Amount', 'site-functionality' ),
+				'key'          => 'amount_calc_cumulative',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Domestic Funding', 'site-functionality' ),
+				'key'          => 'amount_domestic_cumulative',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Foreign Interest Funding', 'site-functionality' ),
+				'key'          => 'amount_foreign_cumulative',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Defense Contractor Funding', 'site-functionality' ),
+				'key'          => 'amount_defense_cumulative',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Cumulative Data', 'site-functionality' ),
+				'key'          => 'cumulative_data',
+				'single'       => true,
+				'type'         => 'array',
+				'show_in_rest' => array(
+					'schema' => array(
+						'type'  => 'array',
+						'items' => array(
+							'amount'          => 'integer',
+							'amount_min'      => 'integer',
+							'amount_max'      => 'integer',
+							'amount_calc'     => 'integer',
+							'amount_domestic' => 'integer',
+							'amount_foreign'  => 'integer',
+							'amount_defense'  => 'integer',
+						),
+					),
+				),
 			),
 			array(
 				'label'        => __( 'Import ID', 'site-functionality' ),
@@ -156,15 +232,15 @@ class Donor extends Post_Type {
 
 	/**
 	 * Modify permalink to parent
-	 * 
+	 *
 	 * @link https://developer.wordpress.org/reference/hooks/post_type_link/
 	 *
-	 * @param  string $permalink
+	 * @param  string          $permalink
 	 * @param  object \WP_Post $post
 	 * @return string
 	 */
 	function redirect_to_parent( $permalink, $post ) : string {
-		if( 'donor' === $post->post_type && $post->post_parent ) {
+		if ( 'donor' === $post->post_type && $post->post_parent ) {
 			$permalink = get_permalink( $post->post_parent );
 		}
 		return $permalink;
