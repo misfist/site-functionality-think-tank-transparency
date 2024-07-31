@@ -63,6 +63,13 @@ class Think_Tank extends Post_Type {
 				'show_in_rest' => true,
 			),
 			array(
+				'label'        => __( 'Limit Information', 'site-functionality' ),
+				'key'          => 'limited_info',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
 				'label'        => __( 'Did Not Accept Defense Contractor Donations', 'site-functionality' ),
 				'key'          => 'no_defense_accepted',
 				'single'       => true,
