@@ -32,6 +32,7 @@
             "Site_Functionality\\": "src/"
         },
         "files": [
+            "src/functions.php",
             "src/helpers.php"
         ]
     },
