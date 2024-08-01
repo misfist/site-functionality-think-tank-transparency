@@ -56,8 +56,10 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
         'Site_Functionality\\Common\\WP_Includes\\Activator' => __DIR__ . '/../..' . '/src/common/wp-includes/class-activator.php',
         'Site_Functionality\\Common\\WP_Includes\\Deactivator' => __DIR__ . '/../..' . '/src/common/wp-includes/class-deactivator.php',
         'Site_Functionality\\Common\\WP_Includes\\I18n' => __DIR__ . '/../..' . '/src/common/wp-includes/class-i18n.php',
+        'Site_Functionality\\Integrations\\API\\API' => __DIR__ . '/../..' . '/src/app/integrations/api/class-api.php',
         'Site_Functionality\\Integrations\\CLI\\Commands' => __DIR__ . '/../..' . '/src/app/integrations/cli/class-commands.php',
         'Site_Functionality\\Integrations\\Integrations' => __DIR__ . '/../..' . '/src/app/integrations/class-integrations.php',
+        'Site_Functionality\\Integrations\\WP_Import\\Actions' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/class-actions.php',
         'Site_Functionality\\Settings' => __DIR__ . '/../..' . '/src/class-settings.php',
         'Site_Functionality\\Site_Functionality' => __DIR__ . '/../..' . '/src/class-site-functionality.php',
     );

@@ -26,8 +26,10 @@ return array(
     'Site_Functionality\\Common\\WP_Includes\\Activator' => $baseDir . '/src/common/wp-includes/class-activator.php',
     'Site_Functionality\\Common\\WP_Includes\\Deactivator' => $baseDir . '/src/common/wp-includes/class-deactivator.php',
     'Site_Functionality\\Common\\WP_Includes\\I18n' => $baseDir . '/src/common/wp-includes/class-i18n.php',
+    'Site_Functionality\\Integrations\\API\\API' => $baseDir . '/src/app/integrations/api/class-api.php',
     'Site_Functionality\\Integrations\\CLI\\Commands' => $baseDir . '/src/app/integrations/cli/class-commands.php',
     'Site_Functionality\\Integrations\\Integrations' => $baseDir . '/src/app/integrations/class-integrations.php',
+    'Site_Functionality\\Integrations\\WP_Import\\Actions' => $baseDir . '/src/app/integrations/wp-import/class-actions.php',
     'Site_Functionality\\Settings' => $baseDir . '/src/class-settings.php',
     'Site_Functionality\\Site_Functionality' => $baseDir . '/src/class-site-functionality.php',
 );
