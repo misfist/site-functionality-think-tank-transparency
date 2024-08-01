@@ -27,6 +27,7 @@ class Donor extends Post_Type {
 		'singular'      => 'Donor',
 		'menu_icon'     => 'dashicons-building',
 		'taxonomies'    => array(
+			'donor',
 			'donor_type',
 		),
 		'has_archive'   => 'donors',
@@ -54,7 +55,12 @@ class Donor extends Post_Type {
 		$this->data['fields'] = array(
 			array(
 				'label' => __( 'Parent Donor', 'site-functionality' ),
-				'key'   => 'parent_donor',
+				'key'   => 'donor_parent_name',
+				'type'  => 'string',
+			),
+			array(
+				'label' => __( 'Parent Donor ID', 'site-functionality' ),
+				'key'   => 'donor_parent_id',
 				'type'  => 'string',
 			),
 			array(
@@ -112,7 +118,7 @@ class Donor extends Post_Type {
 				'show_in_rest' => true,
 			),
 			array(
-				'label'        => __( 'Defense Contractor Funding', 'site-functionality' ),
+				'label'        => __( 'Pentagon Contractor Funding', 'site-functionality' ),
 				'key'          => 'amount_defense_cumulative',
 				'single'       => true,
 				'type'         => 'string',

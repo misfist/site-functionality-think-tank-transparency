@@ -26,7 +26,7 @@ class Think_Tank extends Post_Type {
 		'title'         => 'Think Tanks',
 		'singular'      => 'Think Tank',
 		'menu_icon'     => 'dashicons-bank',
-		'taxonomies'    => array(),
+		'taxonomies'    => array( 'think_tank' ),
 		'has_archive'   => 'think-tanks',
 		'with_front'    => false,
 		'rest_base'     => 'think-tanks',
@@ -70,7 +70,7 @@ class Think_Tank extends Post_Type {
 				'show_in_rest' => true,
 			),
 			array(
-				'label'        => __( 'Did Not Accept Defense Contractor Donations', 'site-functionality' ),
+				'label'        => __( 'Did Not Accept Pentagon Contractor Donations', 'site-functionality' ),
 				'key'          => 'no_defense_accepted',
 				'single'       => true,
 				'type'         => 'boolean',
@@ -180,27 +180,27 @@ class Think_Tank extends Post_Type {
 				'type'         => 'integer',
 				'show_in_rest' => false,
 			),
-			array(
-				'label'        => __( 'Press Contact Email', 'site-functionality' ),
-				'key'          => 'contact_email',
-				'single'       => true,
-				'type'         => 'string',
-				'show_in_rest' => false,
-			),
-			array(
-				'label'        => __( 'Press Contact Phone', 'site-functionality' ),
-				'key'          => 'contact_phone',
-				'single'       => true,
-				'type'         => 'string',
-				'show_in_rest' => false,
-			),
-			array(
-				'label'        => __( 'Press Contact Other', 'site-functionality' ),
-				'key'          => 'contact_other',
-				'single'       => true,
-				'type'         => 'string',
-				'show_in_rest' => false,
-			),
+			// array(
+			// 	'label'        => __( 'Press Contact Email', 'site-functionality' ),
+			// 	'key'          => 'contact_email',
+			// 	'single'       => true,
+			// 	'type'         => 'string',
+			// 	'show_in_rest' => false,
+			// ),
+			// array(
+			// 	'label'        => __( 'Press Contact Phone', 'site-functionality' ),
+			// 	'key'          => 'contact_phone',
+			// 	'single'       => true,
+			// 	'type'         => 'string',
+			// 	'show_in_rest' => false,
+			// ),
+			// array(
+			// 	'label'        => __( 'Press Contact Other', 'site-functionality' ),
+			// 	'key'          => 'contact_other',
+			// 	'single'       => true,
+			// 	'type'         => 'string',
+			// 	'show_in_rest' => false,
+			// ),
 		);
 
 		\add_action( 'init', array( $this, 'register_meta' ) );

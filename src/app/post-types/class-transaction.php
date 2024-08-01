@@ -112,17 +112,28 @@ class Transaction extends Post_Type {
 				'type'  => 'string',
 			),
 			array(
-				'label'        => __( 'Analyzed By', 'site-functionality' ),
-				'key'          => 'analyzed_by',
-				'type'         => 'string',
-				'show_in_rest' => false,
+				'label' => __( 'Donor Parent Name', 'site-functionality' ),
+				'key'   => 'donor_parent_name',
+				'type'  => 'string',
 			),
 			array(
-				'label'        => __( 'Internal Notes', 'site-functionality' ),
-				'key'          => 'internal_notes',
-				'type'         => 'string',
-				'show_in_rest' => false,
+				'label' => __( 'Donor Parent ID', 'site-functionality' ),
+				'key'   => 'donor_parent_id',
+				'type'  => 'integer',
 			),
+			// ar
+			// array(
+			// 	'label'        => __( 'Analyzed By', 'site-functionality' ),
+			// 	'key'          => 'analyzed_by',
+			// 	'type'         => 'string',
+			// 	'show_in_rest' => false,
+			// ),
+			// array(
+			// 	'label'        => __( 'Internal Notes', 'site-functionality' ),
+			// 	'key'          => 'internal_notes',
+			// 	'type'         => 'string',
+			// 	'show_in_rest' => false,
+			// ),
 			array(
 				'label'        => __( 'Import Donor ID', 'site-functionality' ),
 				'key'          => 'import_donor_id',
