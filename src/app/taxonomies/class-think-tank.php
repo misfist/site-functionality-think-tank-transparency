@@ -29,6 +29,7 @@ class Think_Tank extends Taxonomy {
 		'plural'            => 'Think Tanks',
 		'slug'              => 'think-tank',
 		'post_types'        => array(
+			'think_tank',
 			'transaction'
 		),
 		'hierarchical'      => false,
