@@ -32,7 +32,7 @@ class Donor_Type extends Taxonomy {
 			'transaction',
 			'donor'
 		),
-		'hierarchical'      => true,
+		'hierarchical'      => false,
 		'public'            => true,
 		'show_ui'           => true,
 		'show_admin_column' => true,
