@@ -19,6 +19,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class Taxonomies extends Base {
+	/**
+	 * @var string
+	 */
+	public static $domestic = 'U.S. Government';
+
+	/**
+	 * @var string
+	 */
+	public static $foreign = 'Foreign Government';
+
+	/**
+	 * @var string
+	 */
+	public static $defense = 'Pentagon Contractor';
 
 	/**
 	 * Constructor.
