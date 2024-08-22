@@ -29,6 +29,7 @@ class Donor extends Taxonomy {
 		'plural'            => 'Donors',
 		'slug'              => 'donor',
 		'post_types'        => array(
+			'donor',
 			'transaction'
 		),
 		'hierarchical'      => true,
