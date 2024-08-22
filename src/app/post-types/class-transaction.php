@@ -53,7 +53,7 @@ class Transaction extends Post_Type {
 		$this->data['fields'] = array(
 			array(
 				'label' => __( 'Donor', 'site-functionality' ),
-				'key'   => 'specific_donor',
+				'key'   => 'donor',
 				'type'  => 'string',
 			),
 			array(
