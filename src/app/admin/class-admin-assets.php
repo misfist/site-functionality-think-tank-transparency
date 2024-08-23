@@ -10,6 +10,8 @@
 
 namespace Site_Functionality\App\Admin;
 
+use Site_Functionality\App\Admin\Editor;
+
 /**
  * The admin-specific functionality of the plugin.
  *
@@ -35,6 +37,8 @@ class Admin_Assets {
 	 */
 	public function __construct( Settings $settings ) {
 		$this->settings = $settings;
+
+		$editor = new Editor( $this->settings );
 	}
 
 	/**

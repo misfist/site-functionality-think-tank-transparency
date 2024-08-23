@@ -7,13 +7,18 @@
 namespace Site_Functionality\Integrations\CLI;
 
 use \WP_CLI as WP_CLI;
-use function \WP_CLI\Utils\make_progress_bar;
-use function \WP_CLI\Utils\get_flag_value;
+use function WP_CLI\Utils\make_progress_bar;
+use function WP_CLI\Utils\get_flag_value;
 
 /**
  * Typed settings.
  */
 class Commands {
+
+	/**
+	 * Assign transaction values to think tanks
+	 * Assign transaction values to donors, assign parent data, assign parent donor_type and year
+	 */
 
 	/**
 	 * Assigns parent ID to Donor posts.
@@ -25,7 +30,7 @@ class Commands {
 	 *
 	 * ## EXAMPLES
 	 *
-	 * wp custom assign-donor-parents --dry-run
+	 * 		wp custom assign-donor-parents --dry-run
 	 *
 	 * @param string[] $args Positional arguments.
 	 * @param string[] $assoc_args Associative arguments.
@@ -40,78 +45,71 @@ class Commands {
 		}
 
 		/**
-		 * 1. Get Donor posts that have `import_parent_id` meta
+		 * 1. Get Donor posts that have `donor_parent` meta
 		 */
-		$donors = $this->find_posts();
+		$donors = $this->find_donors();
 
 		if ( ! empty( $donors ) && ! is_wp_error( $donors ) ) {
-			/**
-			 * 2. For each Donor post found, get value of `import_parent_id`
-			 */
 			$count   = count( $donors );
 			$updated = 0;
 
 			if ( class_exists( 'WP_CLI' ) ) {
-				WP_CLI::log( sprintf( '%s Donor posts containing `import_parent_id` found.', $count ) );
+				WP_CLI::log( sprintf( '%s Donor posts containing `donor_parent` found.', $count ) );
 			}
 
 			if ( function_exists( 'make_progress_bar' ) ) {
 				$progress = make_progress_bar( 'Add Parents', $count );
 			}
-			foreach ( $donors as $child_post_id ) {
-				$existing_parent = get_post_field( 'post_parent', (int) $child_post_id );
+			foreach ( $donors as $donor ) {
+				$child_post_id = $donor->post_id;
+				$parent_id     = $donor->parent_post_id;
 
-				if ( $existing_parent ) {
-					if ( class_exists( 'WP_CLI' ) ) {
-						WP_CLI::warning( sprintf( 'Post (%s) not updated, it already has a post_parent (%s). ', $child_post_id, $existing_parent ) );
+				/**
+				 * Verify parent post exists
+				 */
+				$post = get_post( $parent_id );
+
+				if ( $post && ! is_wp_error( $post ) ) {
+					$post_id = $post->ID;
+
+					/**
+					 * 2.2. Assign post->ID of found post to current Donor post
+					 */
+					if ( $dry_run ) {
+
+						// WP_CLI::log( sprintf( 'DRY-RUN MODE: Post parent (%s) would be added for post (%s)', $post_id, $child_post_id ) );
+
+					} else {
+
+						$post_data = array(
+							'ID'          => (int) $child_post_id,
+							'post_parent' => (int) $post_id,
+							'meta_input'  => array(
+								'wp_parent_id'   => (int) $post_id,
+								'wp_parent_name' => $post->post_title,
+							),
+						);
+
+						$updated_post_id = wp_update_post( $post_data );
+
+						if ( $updated_post_id ) {
+
+							$updated++;
+
+							if ( class_exists( 'WP_CLI' ) ) {
+								WP_CLI::success( sprintf( 'Post parent (%s) added for post (%s)', $post_id, $updated_post_id ) );
+							}
+						} else {
+
+							if ( class_exists( 'WP_CLI' ) ) {
+								WP_CLI::warning( sprintf( 'Post parent (%s) was found, but wasn\'t added for post (%s)', $post_id, $child_post_id ) );
+							}
+						}
 					}
 				} else {
 
-									/**
-				 * 2.1. Find Donor post that have `import_id` value = to `import_parent_id`
-				 */
-					$parent_post_id = $this->find_donor_post( $child_post_id );
-
-					if ( $parent_post_id ) {
-
-						/**
-						 * 2.2. Assign post->ID of found post to current Donor post
-						 */
-						if ( $dry_run ) {
-
-							// WP_CLI::log( sprintf( 'DRY-RUN MODE: Post parent (%s) would be added for post (%s)', $parent_post_id, $child_post_id ) );
-
-						} else {
-
-							$post_data = array(
-								'ID'          => (int) $child_post_id,
-								'post_parent' => (int) $parent_post_id,
-								'meta_input'  => array(
-									'wp_parent_id' => (int) $parent_post_id,
-								),
-							);
-
-							$updated_post_id = wp_update_post( $post_data );
-
-							if ( $updated_post_id ) {
-
-								$updated++;
-
-								if ( class_exists( 'WP_CLI' ) ) {
-									WP_CLI::success( sprintf( 'Post parent (%s) added for post (%s)', $parent_post_id, $updated_post_id ) );
-								}
-							} else {
-
-								if ( class_exists( 'WP_CLI' ) ) {
-									WP_CLI::warning( sprintf( 'Post parent (%s) was found, but wasn\'t added for post (%s)', $parent_post_id, $child_post_id ) );
-								}
-							}
-						}
-					} else {
-
-						if ( class_exists( 'WP_CLI' ) ) {
-							WP_CLI::warning( sprintf( 'No parent was added for post (%s)', $child_post_id ) );
-						}
+					if ( class_exists( 'WP_CLI' ) ) {
+						WP_CLI::warning( sprintf( 'No parent was added for post (%s)', $child_post_id ) );
 					}
 				}
 
@@ -137,70 +135,125 @@ class Commands {
 
 	/**
 	 * Get Posts
+	 * Get donors that have donor_parent_name different from post_title
 	 *
 	 * @return array \WP_Post
 	 */
-	public function find_posts() : array {
+	public function find_donors() : array {
+		global $wpdb;
 		$post_type = 'donor';
+		$meta_key  = 'donor_parent_name';
 
-		$meta_query = array(
-			array(
-				'key'     => 'import_parent_id',
-				'compare' => 'EXISTS',
-			),
+		$query = $wpdb->prepare(
+			"
+			SELECT post_child.ID AS post_id, post_parent.ID AS parent_post_id
+			FROM {$wpdb->posts} post_child
+			JOIN {$wpdb->postmeta} pm ON post_child.ID = pm.post_id
+			JOIN {$wpdb->posts} post_parent ON pm.meta_value = post_parent.post_title
+			WHERE post_child.post_type = %s
+			AND pm.meta_key = %s
+			AND pm.meta_value != post_child.post_title
+			AND post_parent.post_type = %s
+			",
+			$post_type,
+			$meta_key,
+			$post_type
 		);
 
-		$args = array(
-			'post_type'      => $post_type,
-			'fields'         => 'ids',
-			'posts_per_page' => -1,
-			'meta_query'     => $meta_query,
-		);
+		$results = $wpdb->get_results( $query, OBJECT );
 
-		$query = new \WP_Query( $args );
+		return $results;
+	}
 
-		return $query->get_posts();
+	/**
+	 * Get Donor Post ID
+	 *
+	 * @param  int $child_post_id
+	 * @return mixed int $post->ID || false
+	 */
+	public function find_donor_parent_post_id( $child_post_id ) {
+		$post_type        = 'donor';
+		$meta_key         = 'donor_parent_name';
+		$child_post_title = get_post_field( 'post_title', $child_post_id );
+		$parent_title     = get_post_meta( $child_post_id, $meta_key, true );
+
+		if ( $child_post_title === $parent_title ) {
+			return false;
+		} else {
+			$args = array(
+				'post_type'      => $post_type,
+				'fields'         => 'ids',
+				'posts_per_page' => 1,
+				'title'          => $parent_title,
+			);
+
+			$query = new \WP_Query( $args );
+
+			$posts = $query->get_posts();
+
+			if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
+				return $posts[0];
+			} else {
+				return false;
+			}
+		}
 	}
 
 	/**
 	 * Get Donor Post
 	 *
 	 * @param  int $child_post_id
-	 * @return mixed int $post->ID || false
+	 * @return
 	 */
-	public function find_donor_post( $child_post_id ) {
-		$meta_key  = 'import_parent_id';
-		$parent_id = get_post_meta( $child_post_id, $meta_key, true );
+	public function find_donor_parent_post( $child_post_id ) {
+		$post_type        = 'donor';
+		$meta_key         = 'donor_parent_name';
+		$child_post_title = get_post_field( 'post_title', $child_post_id );
+		$parent_title     = get_post_meta( $child_post_id, $meta_key, true );
 
-		$post_type = 'donor';
-
-		$meta_query = array(
-			array(
-				'key'     => 'import_parent_id',
-				'value'   => $parent_id,
-				'compare' => '=',
-			),
-		);
-
-		$args = array(
-			'post_type'      => $post_type,
-			'fields'         => 'ids',
-			'posts_per_page' => 1,
-			'meta_query'     => $meta_query,
-		);
-
-		$query = new \WP_Query( $args );
-
-		$posts = $query->get_posts();
-
-		if ( $posts ) {
-			return $posts[0];
-		} else {
+		if ( $child_post_title === $parent_title ) {
 			return false;
+		} else {
+			$args = array(
+				'post_type'      => $post_type,
+				'posts_per_page' => 1,
+				'title'          => $parent_title,
+			);
+
+			$query = new \WP_Query( $args );
+
+			$posts = $query->get_posts();
+
+			if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
+				return $posts[0];
+			} else {
+				return false;
+			}
 		}
 	}
 
 }
+
+/**
+ * Assign transaction data
+ *
+ * @param  int    $import_id
+ * @param  object $import
+ * @return void
+ */
+function assign_transaction_data_after_import( $import_id, $import ) : void {
+	add_option( '_assign_transaction_data_after_import', $import_id );
+	
+	if ( 8 != $import_id ) {
+		return;
+	}
+	assign_transaction_data();
+	
+	add_option( '_assign_transaction_data_after_import_run', date( 'c' ) );
+
+	return;
+}
+// \add_action( 'pmxi_after_xml_import', __NAMESPACE__ . '\assign_transaction_data_after_import', 10, 2 );
 
 /**
  * Assign Donor parents
@@ -216,38 +269,69 @@ if ( class_exists( 'WP_CLI' ) ) {
 }
 
 /**
- * Assign transaction data
- *
- * @param  int    $import_id
- * @param  object $import
- * @return void
- */
-function assign_transaction_data_after_import( $import_id, $import ) : void {
-	if ( 8 !== $import_id ) {
-		return;
-	}
-	assign_transaction_data();
-}
-add_action( 'pmxi_after_xml_import', __NAMESPACE__ . '\assign_transaction_data_after_import', 10, 2 );
-
-/**
  * Save transaction data as postmeta
  *
  * @return void
  */
 function assign_transaction_data( $args = array() ) : void {
 	assign_think_tank_data();
-	if ( class_exists( '\WP_CLI' ) ) {
-		\WP_CLI::success( __( 'Transactions assigned to think tanks.', 'ttt' ) );
+	if ( class_exists( 'WP_CLI' ) ) {
+		WP_CLI::success( __( 'Transactions assigned to think tanks.', 'site-functionality' ) );
 	}
 
 	assign_donor_data();
-	if ( class_exists( '\WP_CLI' ) ) {
-		\WP_CLI::success( __( 'Transactions assigned to donors.', 'ttt' ) );
+	if ( class_exists( 'WP_CLI' ) ) {
+		WP_CLI::success( __( 'Transactions assigned to donors.', 'site-functionality' ) );
 	}
 }
-if ( class_exists( '\WP_CLI' ) ) {
-	\WP_CLI::add_command( 'transaction-data all', __NAMESPACE__ . '\assign_transaction_data' );
+if ( class_exists( 'WP_CLI' ) ) {
+	WP_CLI::add_command( 'transaction-data all', __NAMESPACE__ . '\assign_transaction_data' );
+}
+
+/**
+ * Assign Transaction Donor Parent
+ *
+ * @return void
+ */
+function assign_transaction_donor_parent() : void {
+	$transactions = get_transactions();
+	if ( ! empty( $transactions ) && ! is_wp_error( $transactions ) ) {
+		foreach ( $transactions as $post_id ) {
+			$meta_key   = 'donor';
+			$donor_name = get_post_meta( $post_id, $meta_key, true );
+			if ( $donor_name ) {
+				/**
+				 * Get parent
+				 */
+				$donor_parent = find_donor_parent_post( $post_id );
+
+				if ( $donor_parent ) {
+					if ( trim( strtolower( $donor_parent->post_title ) ) !== trim( strtolower( $donor_name ) ) ) {
+
+						// Assign donor parent_id and donor post_id to transaction meta
+						\wp_update_post(
+							array(
+								'ID'          => $post_id,
+								'post_parent' => $donor_parent_id,
+								'meta_input'  => array(
+									'assigned_parent_using_name' => $donor_parent_id,
+									'assigned_donor_parent_name' => $donor_parent_name,
+									'donor_parent_id' => $donor_parent_id,
+									'run_from'        => __FUNCTION__,
+									'donors'          => $donor_parent,
+								),
+							)
+						);
+
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+if ( class_exists( 'WP_CLI' ) ) {
+	WP_CLI::add_command( 'transaction-data donor-parent', __NAMESPACE__ . '\assign_transaction_donor_parent' );
 }
 
 /**
@@ -276,8 +360,8 @@ function assign_think_tank_data() : void {
 		}
 	}
 }
-if ( class_exists( '\WP_CLI' ) ) {
-	\WP_CLI::add_command( 'transaction-data think-tanks', __NAMESPACE__ . '\assign_think_tank_data' );
+if ( class_exists( 'WP_CLI' ) ) {
+	WP_CLI::add_command( 'transaction-data think-tanks', __NAMESPACE__ . '\assign_think_tank_data' );
 }
 
 /**
@@ -306,36 +390,67 @@ function assign_donor_data() : void {
 		}
 	}
 }
-if ( class_exists( '\WP_CLI' ) ) {
-	\WP_CLI::add_command( 'transaction-data donors', __NAMESPACE__ . '\assign_donor_data' );
+if ( class_exists( 'WP_CLI' ) ) {
+	WP_CLI::add_command( 'transaction-data donors', __NAMESPACE__ . '\assign_donor_data' );
 }
 
 /**
- * Get all think tanks
+ * Get all transaction IDs
+ *
+ * @return array
+ */
+function get_transactions() : array {
+	$post_type = 'transaction';
+	return find_post_ids( $post_type );
+}
+
+/**
+ * Get all think tank IDs
  *
  * @return array
  */
 function get_think_tanks() : array {
-	$args = array(
-		'post_type'      => 'think_tank',
-		'posts_per_page' => -1,
-		'fields'         => 'ids',
-	);
-	return get_posts( $args );
+	$post_type = 'think_tank';
+	return find_post_ids( $post_type );
 }
 
 /**
- * Get all donors
+ * Get all donor IDs
  *
  * @return array
  */
 function get_donors() : array {
+	$post_type = 'donor';
+	return find_post_ids( $post_type );
+}
+
+/**
+ * Get Posts
+ *
+ * @param  string $post_type
+ * @return array
+ */
+function find_post_ids( $post_type = 'transaction' ) : array {
 	$args = array(
-		'post_type'      => 'donor',
+		'post_type'      => $post_type,
 		'posts_per_page' => -1,
 		'fields'         => 'ids',
 	);
-	return get_posts( $args );
+	return \get_posts( $args );
+}
+
+/**
+ * Get Posts
+ *
+ * @param  string $post_type
+ * @return array
+ */
+function find_posts( $post_type = 'transaction' ) : array {
+	$args = array(
+		'post_type'      => $post_type,
+		'posts_per_page' => -1,
+	);
+	return \get_posts( $args );
 }
 
 /**
@@ -400,7 +515,7 @@ function calculate_data( $post_id, $data ) : array {
 		array_filter(
 			$data,
 			function( $var ) {
-				return 'Defense Contractor' == $var['type'];
+				return 'Pentagon Contractor' == $var['type'];
 			}
 		),
 		'amount_calc'
@@ -423,7 +538,7 @@ function calculate_data( $post_id, $data ) : array {
 /**
  * Check if range
  *
- * @param  string  $item
+ * @param  string $item
  * @return boolean
  */
 function is_range( $item ) : bool {
@@ -558,33 +673,38 @@ function get_think_tank_transactions_by_slug( $post_slug ) : array {
  */
 function get_think_tank_transaction( $post_id = 0 ) : array {
 	global $post;
-	$donation_year = wp_get_post_terms( $post_id, 'year', array( 'number' => 1 ) );
-	$post_id       = ( $post_id ) ? $post_id : $post->ID;
-	$donor_obj     = wp_get_post_terms( $post_id, 'donor', array( 'number' => 1 ) );
-	$donor         = get_post_meta( $post_id, 'donor', true );
-	$amount        = get_post_meta( $post_id, 'amount', true );
-	$amount_min    = get_post_meta( $post_id, 'amount_min', true );
-	$amount_max    = get_post_meta( $post_id, 'amount_max', true );
-	$amount_calc   = get_post_meta( $post_id, 'amount_calc', true );
-	$data_notes    = get_post_meta( $post_id, 'source_notes', true );
-	$disclosed     = get_post_meta( $post_id, 'disclosed', true );
-	$source        = get_post_meta( $post_id, 'source', true );
-	$type          = get_post_meta( $post_id, 'donor_type', true );
-	$type_obj      = wp_get_post_terms( $post_id, 'donor_type', array( 'number' => 1 ) );
-	$year          = ( ! empty( $donation_year ) && ! is_wp_error( $donation_year ) ) ? $donation_year : (int) get_post_meta( $post_id, 'year', true );
-	$transaction   = array(
-		'donor'       => $donor,
-		'donor_obj'   => $donor_obj,
-		'amount'      => (int) $amount,
-		'amount_min'  => (int) $amount_min,
-		'amount_max'  => (int) $amount_max,
-		'amount_calc' => (int) $amount_calc,
-		'type'        => $type,
-		'type_obj'    => $type_obj,
-		'year'        => $year,
-		'disclosed'   => $disclosed,
-		'data_notes'  => $data_notes,
-		'source'      => $source,
+	$donation_year     = wp_get_post_terms( $post_id, 'year', array( 'number' => 1 ) );
+	$post_id           = ( $post_id ) ? $post_id : $post->ID;
+	$donor             = get_post_meta( $post_id, 'donor', true );
+	$donor_obj         = wp_get_post_terms( $post_id, 'donor', array( 'number' => 1 ) );
+	$donor_parent_obj  = find_donor_parent_post_by_title( $donor );
+	$donor_parent_name = ( $donor_parent_obj ) ? $donor_parent_obj->post_title : $donor;
+	$donor_parent_id   = ( $donor_parent_obj ) ? $donor_parent_obj->ID : '';
+	$amount            = get_post_meta( $post_id, 'amount', true );
+	$amount_min        = get_post_meta( $post_id, 'amount_min', true );
+	$amount_max        = get_post_meta( $post_id, 'amount_max', true );
+	$amount_calc       = get_post_meta( $post_id, 'amount_calc', true );
+	$data_notes        = get_post_meta( $post_id, 'source_notes', true );
+	$disclosed         = get_post_meta( $post_id, 'disclosed', true );
+	$source            = get_post_meta( $post_id, 'source', true );
+	$type              = get_post_meta( $post_id, 'donor_type', true );
+	$type_obj          = wp_get_post_terms( $post_id, 'donor_type', array( 'number' => 1 ) );
+	$year              = ( ! empty( $donation_year ) && ! is_wp_error( $donation_year ) ) ? $donation_year : (int) get_post_meta( $post_id, 'year', true );
+	$transaction       = array(
+		'donor'             => trim( esc_attr( $donor ) ),
+		'donor_obj'         => $donor_obj,
+		'amount'            => (int) $amount,
+		'amount_min'        => (int) $amount_min,
+		'amount_max'        => (int) $amount_max,
+		'amount_calc'       => (int) $amount_calc,
+		'type'              => ( ! empty( $type_obj ) && ! is_wp_error( $type_obj ) ) ? $type_obj[0]->name : trim( $type ),
+		'type_obj'          => $type_obj,
+		'year'              => $year,
+		'disclosed'         => $disclosed,
+		'data_notes'        => $data_notes,
+		'source'            => $source,
+		'donor_parent_name' => $donor_parent_name,
+		'donor_parent_id'   => $donor_parent_id,
 	);
 	return $transaction;
 }
@@ -642,7 +762,7 @@ function get_donor_transaction( $post_id ) : array {
 	$type_obj       = wp_get_post_terms( $post_id, 'donor_type', array( 'number' => 1 ) );
 	$year           = ( ! empty( $donation_year ) && ! is_wp_error( $donation_year ) ) ? $donation_year : (int) get_post_meta( $post_id, 'year', true );
 	$transaction    = array(
-		'think_tank'     => $think_tank,
+		'think_tank'     => trim( $think_tank ),
 		'think_tank_obj' => $think_tank_obj,
 		'amount'         => (int) $amount,
 		'amount_min'     => (int) $amount_min,
@@ -650,10 +770,10 @@ function get_donor_transaction( $post_id ) : array {
 		'amount_calc'    => (int) $amount_calc,
 		'type'           => $type,
 		'type_obj'       => $type_obj,
-		'year'           => $year,
-		'disclosed'      => $disclosed,
-		'data_notes'     => $data_notes,
-		'source'         => $source,
+		'year'           => trim( $year ),
+		'disclosed'      => trim( $disclosed ),
+		'data_notes'     => trim( wp_kses_post( $data_notes ) ),
+		'source'         => trim( esc_url( $source ) ),
 	);
 	return $transaction;
 }
@@ -677,3 +797,89 @@ function think_tank_transactions( array $source_args, $block_instance, string $a
 	return $output;
 }
 
+/**
+ * Get Donor Post
+ *
+ * @param  int $child_post_id
+ * @return
+ */
+function find_donor_parent_post( $child_post_id ) {
+	$post_type        = 'donor';
+	$meta_key         = 'donor_parent_name';
+	$child_post_title = get_post_field( 'post_title', $child_post_id );
+	$parent_title     = get_post_meta( $child_post_id, $meta_key, true );
+
+	if ( trim( strtolower( $child_post_title ) ) === trim( strtolower( $parent_title ) ) ) {
+		return 0;
+	} else {
+		$args = array(
+			'post_type'      => $post_type,
+			'posts_per_page' => 1,
+			'title'          => $parent_title,
+		);
+
+		$query = new \WP_Query( $args );
+
+		$posts = $query->get_posts();
+
+		if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
+			return $posts[0];
+		} else {
+			return 0;
+		}
+	}
+}
+
+/**
+ * Get Donor Post
+ *
+ * @param  int $child_post_id
+ * @return
+ */
+function find_donor_post_by_title( $parent_title ) {
+	$post_type = 'donor';
+
+	$args = array(
+		'post_type'      => $post_type,
+		'posts_per_page' => 1,
+		'title'          => trim( $parent_title ),
+	);
+
+	$query = new \WP_Query( $args );
+
+	$posts = $query->get_posts();
+
+	if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
+		return $posts[0];
+	} else {
+		return false;
+	}
+}
+
+/**
+ * Get Donor Post
+ *
+ * @param  int $child_post_id
+ * @return
+ */
+function find_donor_parent_post_by_title( $parent_title ) {
+	$post_type = 'donor';
+
+	$args = array(
+		'post_type'      => $post_type,
+		'posts_per_page' => 1,
+		'title'          => $parent_title,
+	);
+
+	$query = new \WP_Query( $args );
+
+	$posts = $query->get_posts();
+
+	if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
+		$donor = $posts[0];
+
+		return find_donor_parent_post( $donor->ID );
+	} else {
+		return false;
+	}
+}

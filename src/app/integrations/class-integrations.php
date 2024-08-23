@@ -10,6 +10,7 @@ namespace Site_Functionality\Integrations;
 use Site_Functionality\Common\Abstracts\Base;
 use Site_Functionality\Integrations\CLI\Commands;
 use Site_Functionality\Integrations\WP_Import\Actions;
+use Site_Functionality\Integrations\API\API;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -36,6 +37,7 @@ class Integrations extends Base {
 	public function init(): void {
 		new Commands( $this->settings );
 		new Actions( $this->settings );
+		new API();
 	}
 
 }
