@@ -9,6 +9,7 @@ return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'Site_Functionality\\App\\Admin\\Admin_Assets' => $baseDir . '/src/app/admin/class-admin-assets.php',
     'Site_Functionality\\App\\Admin\\Admin_Settings' => $baseDir . '/src/app/admin/class-admin-settings.php',
+    'Site_Functionality\\App\\Admin\\Editor' => $baseDir . '/src/app/admin/class-editor.php',
     'Site_Functionality\\App\\Custom_Fields\\Custom_Fields' => $baseDir . '/src/app/custom-fields/class-custom-fields.php',
     'Site_Functionality\\App\\Frontend\\Frontend_Assets' => $baseDir . '/src/app/frontend/class-frontend-assets.php',
     'Site_Functionality\\App\\Post_Types\\Donor' => $baseDir . '/src/app/post-types/class-donor.php',
@@ -32,4 +33,5 @@ return array(
     'Site_Functionality\\Integrations\\WP_Import\\Actions' => $baseDir . '/src/app/integrations/wp-import/class-actions.php',
     'Site_Functionality\\Settings' => $baseDir . '/src/class-settings.php',
     'Site_Functionality\\Site_Functionality' => $baseDir . '/src/class-site-functionality.php',
+    'Site_Functionality\\Transaction_Data_CLI' => $baseDir . '/src/app/integrations/wp-import/functions.php',
 );

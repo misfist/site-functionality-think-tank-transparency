@@ -8,4 +8,5 @@ $baseDir = dirname($vendorDir);
 return array(
     'e2bf25bea31b2773509eb6c14a13ecac' => $baseDir . '/src/functions.php',
     'e1fd76e2b159e9584a1c441b487c9a12' => $baseDir . '/src/helpers.php',
+    'ed9d40526b5744f58f5598bf60a5db2a' => $baseDir . '/src/app/integrations/wp-import/functions.php',
 );

@@ -33,7 +33,8 @@
         },
         "files": [
             "src/functions.php",
-            "src/helpers.php"
+            "src/helpers.php",
+            "src/app/integrations/wp-import/functions.php"
         ]
     },
     "autoload-dev": {
