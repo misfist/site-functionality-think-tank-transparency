@@ -27,7 +27,7 @@ class Year extends Taxonomy {
 		'name'              => 'Years',
 		'menu_name'         => 'Years',
 		'plural'            => 'Years',
-		'slug'              => 'y',
+		'slug'              => 'donation-year',
 		'post_types'        => array(
 			'transaction'
 		),
