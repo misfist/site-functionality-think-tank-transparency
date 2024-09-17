@@ -7,6 +7,8 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Flatted' => $baseDir . '/src/app/blocks/node_modules/flatted/php/flatted.php',
+    'FlattedString' => $baseDir . '/src/app/blocks/node_modules/flatted/php/flatted.php',
     'Site_Functionality\\App\\Admin\\Admin_Assets' => $baseDir . '/src/app/admin/class-admin-assets.php',
     'Site_Functionality\\App\\Admin\\Admin_Settings' => $baseDir . '/src/app/admin/class-admin-settings.php',
     'Site_Functionality\\App\\Admin\\Editor' => $baseDir . '/src/app/admin/class-editor.php',
@@ -29,6 +31,11 @@ return array(
     'Site_Functionality\\Common\\WP_Includes\\I18n' => $baseDir . '/src/common/wp-includes/class-i18n.php',
     'Site_Functionality\\Integrations\\API\\API' => $baseDir . '/src/app/integrations/api/class-api.php',
     'Site_Functionality\\Integrations\\CLI\\Commands' => $baseDir . '/src/app/integrations/cli/class-commands.php',
+    'Site_Functionality\\Integrations\\Data_Tables\\Data' => $baseDir . '/src/app/integrations/data-tables/class-data.php',
+    'Site_Functionality\\Integrations\\Data_Tables\\Data_Filters' => $baseDir . '/src/app/integrations/data-tables/class-data-filters.php',
+    'Site_Functionality\\Integrations\\Data_Tables\\Data_Tables' => $baseDir . '/src/app/integrations/data-tables/class-data-tables.php',
+    'Site_Functionality\\Integrations\\Data_Tables\\Donor' => $baseDir . '/src/app/integrations/data-tables/class-donor.php',
+    'Site_Functionality\\Integrations\\Data_Tables\\Think_Tank' => $baseDir . '/src/app/integrations/data-tables/class-think-tank.php',
     'Site_Functionality\\Integrations\\Integrations' => $baseDir . '/src/app/integrations/class-integrations.php',
     'Site_Functionality\\Integrations\\WP_Import\\Actions' => $baseDir . '/src/app/integrations/wp-import/class-actions.php',
     'Site_Functionality\\Settings' => $baseDir . '/src/class-settings.php',

@@ -10,6 +10,9 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
         'e2bf25bea31b2773509eb6c14a13ecac' => __DIR__ . '/../..' . '/src/functions.php',
         'e1fd76e2b159e9584a1c441b487c9a12' => __DIR__ . '/../..' . '/src/helpers.php',
         'ed9d40526b5744f58f5598bf60a5db2a' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/functions.php',
+        '1ec3eeb6e69de1dcd726646bace34705' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/helpers.php',
+        '9ad87cc678aa762a56cebc235b7d44b9' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/get-data.php',
+        'ce8f0f0ec7644263b679714ce498f739' => __DIR__ . '/../..' . '/src/app/blocks/blocks.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -38,6 +41,8 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Flatted' => __DIR__ . '/../..' . '/src/app/blocks/node_modules/flatted/php/flatted.php',
+        'FlattedString' => __DIR__ . '/../..' . '/src/app/blocks/node_modules/flatted/php/flatted.php',
         'Site_Functionality\\App\\Admin\\Admin_Assets' => __DIR__ . '/../..' . '/src/app/admin/class-admin-assets.php',
         'Site_Functionality\\App\\Admin\\Admin_Settings' => __DIR__ . '/../..' . '/src/app/admin/class-admin-settings.php',
         'Site_Functionality\\App\\Admin\\Editor' => __DIR__ . '/../..' . '/src/app/admin/class-editor.php',
@@ -60,6 +65,11 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
         'Site_Functionality\\Common\\WP_Includes\\I18n' => __DIR__ . '/../..' . '/src/common/wp-includes/class-i18n.php',
         'Site_Functionality\\Integrations\\API\\API' => __DIR__ . '/../..' . '/src/app/integrations/api/class-api.php',
         'Site_Functionality\\Integrations\\CLI\\Commands' => __DIR__ . '/../..' . '/src/app/integrations/cli/class-commands.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Data' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Data_Filters' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data-filters.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Data_Tables' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data-tables.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Donor' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-donor.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Think_Tank' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-think-tank.php',
         'Site_Functionality\\Integrations\\Integrations' => __DIR__ . '/../..' . '/src/app/integrations/class-integrations.php',
         'Site_Functionality\\Integrations\\WP_Import\\Actions' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/class-actions.php',
         'Site_Functionality\\Settings' => __DIR__ . '/../..' . '/src/class-settings.php',

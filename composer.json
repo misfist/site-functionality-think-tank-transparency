@@ -34,7 +34,10 @@
         "files": [
             "src/functions.php",
             "src/helpers.php",
-            "src/app/integrations/wp-import/functions.php"
+            "src/app/integrations/wp-import/functions.php",
+            "src/app/integrations/data-tables/helpers.php",
+            "src/app/integrations/data-tables/get-data.php",
+            "src/app/blocks/blocks.php"
         ]
     },
     "autoload-dev": {

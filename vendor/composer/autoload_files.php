@@ -9,4 +9,7 @@ return array(
     'e2bf25bea31b2773509eb6c14a13ecac' => $baseDir . '/src/functions.php',
     'e1fd76e2b159e9584a1c441b487c9a12' => $baseDir . '/src/helpers.php',
     'ed9d40526b5744f58f5598bf60a5db2a' => $baseDir . '/src/app/integrations/wp-import/functions.php',
+    '1ec3eeb6e69de1dcd726646bace34705' => $baseDir . '/src/app/integrations/data-tables/helpers.php',
+    '9ad87cc678aa762a56cebc235b7d44b9' => $baseDir . '/src/app/integrations/data-tables/get-data.php',
+    'ce8f0f0ec7644263b679714ce498f739' => $baseDir . '/src/app/blocks/blocks.php',
 );
