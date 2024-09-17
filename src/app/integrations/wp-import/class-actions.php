@@ -20,7 +20,7 @@ class Actions extends Base {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct( $settings ) {
+	public function __construct( $settings = array() ) {
 		parent::__construct( $settings );
 		$this->init();
 	}
@@ -410,7 +410,7 @@ class Actions extends Base {
 
 		if ( ! empty( $think_tanks ) && ! is_wp_error( $think_tanks ) ) {
 			foreach ( $think_tanks as $think_tank_id ) {
-				$data = $this->get_think_tank_data( $think_tank_id );
+				$data = $this->get_single_think_tank_data( $think_tank_id );
 				if ( $data ) {
 					\update_post_meta( $think_tank_id, 'transactions', $data, true );
 					$cumulative_data = $this->calculate_data( $think_tank_id, $data );
@@ -542,7 +542,7 @@ class Actions extends Base {
 	 * @param  integer $post_id
 	 * @return void
 	 */
-	function get_think_tank_data( $post_id = 0 ) {
+	function get_single_think_tank_data( $post_id = 0 ) {
 		global $post;
 		$post_id      = ( $post_id ) ? $post_id : get_the_ID();
 		$post_slug    = get_post_field( 'post_name', $post_id );

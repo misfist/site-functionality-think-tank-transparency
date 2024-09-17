@@ -39,7 +39,7 @@ class Taxonomies extends Base {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct( $settings ) {
+	public function __construct( $settings = array() ) {
 		parent::__construct( $settings );
 		$this->init();
 	}
@@ -50,10 +50,10 @@ class Taxonomies extends Base {
 	 * @return void
 	 */
 	public function init(): void {
-		new Donor( $this->settings );
-		new Donor_Type( $this->settings );
-		new Think_Tank( $this->settings );
-		new Year( $this->settings );
+		new Donor();
+		new Donor_Type();
+		new Think_Tank();
+		new Year();
 	}
 
 }

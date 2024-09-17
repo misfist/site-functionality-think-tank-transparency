@@ -24,7 +24,7 @@ class Post_Types extends Base {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct( $settings ) {
+	public function __construct( $settings = array() ) {
 		parent::__construct( $settings );
 		$this->init();
 	}
@@ -35,9 +35,9 @@ class Post_Types extends Base {
 	 * @return void
 	 */
 	public function init(): void {
-		new Donor( $this->settings );
-		new Think_Tank( $this->settings );
-		new Transaction( $this->settings );
+		new Donor();
+		new Think_Tank();
+		new Transaction();
 	}
 
 }

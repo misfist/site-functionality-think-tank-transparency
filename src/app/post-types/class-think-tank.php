@@ -33,7 +33,7 @@ class Think_Tank extends Post_Type {
 		'supports'      => array(
 			'title',
 			'custom-fields',
-			// 'editor',
+			'editor',
 		),
 		// 'capabilities'  => array( 'create_posts' => false ),
 		'menu_position' => 20,

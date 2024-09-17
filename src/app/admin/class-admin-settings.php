@@ -35,7 +35,7 @@ class Admin_Settings extends Base {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct( $settings ) {
+	public function __construct( $settings = array() ) {
 		parent::__construct( $settings );
 		$this->init();
 	}

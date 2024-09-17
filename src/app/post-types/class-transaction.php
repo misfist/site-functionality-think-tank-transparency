@@ -172,7 +172,6 @@ class Transaction extends Post_Type {
 				$title = get_post_field( 'post_title', $post );
 				// AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council'
 				// $query = str_replace( ' LIMIT', " AND transaction_taxonomy_think_tank_tbl.name = 'Atlantic Council' LIMIT", $query );
-				// var_dump( $query );
 				return $query;
 			},
 			'',

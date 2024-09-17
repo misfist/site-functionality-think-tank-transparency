@@ -10,7 +10,8 @@ namespace Site_Functionality\Integrations;
 use Site_Functionality\Common\Abstracts\Base;
 use Site_Functionality\Integrations\CLI\Commands;
 use Site_Functionality\Integrations\WP_Import\Actions;
-use Site_Functionality\Integrations\API\API;
+// use Site_Functionality\Integrations\API\API;
+// use Site_Functionality\Integrations\Data_Tables\Data_Tables;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +25,7 @@ class Integrations extends Base {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct( $settings ) {
+	public function __construct( $settings = array() ) {
 		parent::__construct( $settings );
 		$this->init();
 	}
@@ -35,9 +36,10 @@ class Integrations extends Base {
 	 * @return void
 	 */
 	public function init(): void {
-		new Commands( $this->settings );
-		new Actions( $this->settings );
-		new API();
+		new Commands();
+		new Actions();
+		// new Data_Tables();
+		// new API();
 	}
 
 }
