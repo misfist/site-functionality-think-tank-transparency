@@ -39,9 +39,9 @@ class Think_Tank extends Taxonomy {
 		'show_in_nav_menus' => false,
 		'show_tagcloud'     => false,
 		'show_in_rest'      => true,
-		'has_archive'       => true,
+		'has_archive'       => false,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'think-tank-terms',
+		'rest_base'         => 'think_tank-terms',
 	);
 
 	/**

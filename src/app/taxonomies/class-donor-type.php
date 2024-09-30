@@ -41,7 +41,7 @@ class Donor_Type extends Taxonomy {
 		'show_in_rest'      => true,
 		'has_archive'       => false,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'donor-types',
+		'rest_base'         => 'donor_type-terms',
 	);
 
 	/**
@@ -66,6 +66,7 @@ class Donor_Type extends Taxonomy {
 	 */
 	public function register_query_vars( array $query_vars ) : array {
 		$query_vars[] = 'donor-type';
+		$query_vars[] = 'donor_type';
 		return $query_vars;
 	}
 

@@ -40,7 +40,7 @@ class Year extends Taxonomy {
 		'show_in_rest'      => true,
 		'has_archive'       => true,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'donation-years',
+		'rest_base'         => 'donation_year-terms',
 	);
 
 	/**
