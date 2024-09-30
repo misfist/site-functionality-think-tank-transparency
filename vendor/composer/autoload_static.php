@@ -4,15 +4,12 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
+class ComposerStaticInitf147f25c507539ec9846c5fde74dd04a
 {
     public static $files = array (
         'e2bf25bea31b2773509eb6c14a13ecac' => __DIR__ . '/../..' . '/src/functions.php',
         'e1fd76e2b159e9584a1c441b487c9a12' => __DIR__ . '/../..' . '/src/helpers.php',
         'ed9d40526b5744f58f5598bf60a5db2a' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/functions.php',
-        '1ec3eeb6e69de1dcd726646bace34705' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/helpers.php',
-        '9ad87cc678aa762a56cebc235b7d44b9' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/get-data.php',
-        'ce8f0f0ec7644263b679714ce498f739' => __DIR__ . '/../..' . '/src/app/blocks/blocks.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -41,8 +38,6 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'Flatted' => __DIR__ . '/../..' . '/src/app/blocks/node_modules/flatted/php/flatted.php',
-        'FlattedString' => __DIR__ . '/../..' . '/src/app/blocks/node_modules/flatted/php/flatted.php',
         'Site_Functionality\\App\\Admin\\Admin_Assets' => __DIR__ . '/../..' . '/src/app/admin/class-admin-assets.php',
         'Site_Functionality\\App\\Admin\\Admin_Settings' => __DIR__ . '/../..' . '/src/app/admin/class-admin-settings.php',
         'Site_Functionality\\App\\Admin\\Editor' => __DIR__ . '/../..' . '/src/app/admin/class-editor.php',
@@ -80,10 +75,10 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$classMap;
 
         }, null, ClassLoader::class);
     }

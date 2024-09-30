@@ -7,8 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
-    'Flatted' => $baseDir . '/src/app/blocks/node_modules/flatted/php/flatted.php',
-    'FlattedString' => $baseDir . '/src/app/blocks/node_modules/flatted/php/flatted.php',
     'Site_Functionality\\App\\Admin\\Admin_Assets' => $baseDir . '/src/app/admin/class-admin-assets.php',
     'Site_Functionality\\App\\Admin\\Admin_Settings' => $baseDir . '/src/app/admin/class-admin-settings.php',
     'Site_Functionality\\App\\Admin\\Editor' => $baseDir . '/src/app/admin/class-editor.php',
