@@ -344,7 +344,7 @@ function assign_think_tank_data() : void {
 
 	if ( ! empty( $think_tanks ) && ! is_wp_error( $think_tanks ) ) {
 		foreach ( $think_tanks as $think_tank_id ) {
-			$data = get_think_tank_data( $think_tank_id );
+			$data = get_single_think_tank_data( $think_tank_id );
 			if ( $data ) {
 				update_post_meta( $think_tank_id, 'transactions', $data, true );
 				$cumulative_data = calculate_data( $think_tank_id, $data );
@@ -568,7 +568,7 @@ function get_range_values( $item ) {
 function get_think_tank_output( $post_id = 0 ) {
 	global $post;
 	$post_id = ( $post_id ) ? $post_id : get_the_ID();
-	$data    = get_think_tank_data( $post_id );
+	$data    = get_single_think_tank_data( $post_id );
 
 	ob_start();
 
@@ -614,7 +614,7 @@ function get_think_tank_output( $post_id = 0 ) {
  * @param  integer $post_id
  * @return void
  */
-function get_think_tank_data( $post_id = 0 ) {
+function get_single_think_tank_data( $post_id = 0 ) {
 	global $post;
 	$post_id      = ( $post_id ) ? $post_id : get_the_ID();
 	$post_slug    = get_post_field( 'post_name', $post_id );
@@ -791,7 +791,7 @@ function think_tank_transactions( array $source_args, $block_instance, string $a
 	$post_id   = $block_instance->context['postId'];
 	$post_type = $block_instance->context['postType'];
 
-	$data   = get_think_tank_data( $block_instance->context['postId'] );
+	$data   = get_single_think_tank_data( $block_instance->context['postId'] );
 	$output = get_think_tank_output( $block_instance->context['postId'] );
 
 	return $output;

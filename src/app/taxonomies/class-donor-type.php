@@ -30,7 +30,7 @@ class Donor_Type extends Taxonomy {
 		'slug'              => 'donor-type',
 		'post_types'        => array(
 			'transaction',
-			'donor'
+			'donor',
 		),
 		'hierarchical'      => false,
 		'public'            => true,
@@ -41,7 +41,7 @@ class Donor_Type extends Taxonomy {
 		'show_in_rest'      => true,
 		'has_archive'       => false,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'donor-types',
+		'rest_base'         => 'donor_type-terms',
 	);
 
 	/**
@@ -53,6 +53,21 @@ class Donor_Type extends Taxonomy {
 		parent::init();
 
 		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
+		\add_filter( 'query_vars', array( $this, 'register_query_vars' ) );
+	}
+
+	/**
+	 * Register query vars
+	 *
+	 * @link https://developer.wordpress.org/reference/hooks/query_vars/
+	 *
+	 * @param  array $query_vars
+	 * @return array
+	 */
+	public function register_query_vars( array $query_vars ) : array {
+		$query_vars[] = 'donor-type';
+		$query_vars[] = 'donor_type';
+		return $query_vars;
 	}
 
 	/**
@@ -84,5 +99,5 @@ class Donor_Type extends Taxonomy {
 			}
 		}
 	}
-	
+
 }

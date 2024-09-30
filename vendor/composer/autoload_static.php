@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
+class ComposerStaticInitf147f25c507539ec9846c5fde74dd04a
 {
     public static $files = array (
         'e2bf25bea31b2773509eb6c14a13ecac' => __DIR__ . '/../..' . '/src/functions.php',
@@ -60,6 +60,11 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
         'Site_Functionality\\Common\\WP_Includes\\I18n' => __DIR__ . '/../..' . '/src/common/wp-includes/class-i18n.php',
         'Site_Functionality\\Integrations\\API\\API' => __DIR__ . '/../..' . '/src/app/integrations/api/class-api.php',
         'Site_Functionality\\Integrations\\CLI\\Commands' => __DIR__ . '/../..' . '/src/app/integrations/cli/class-commands.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Data' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Data_Filters' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data-filters.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Data_Tables' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data-tables.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Donor' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-donor.php',
+        'Site_Functionality\\Integrations\\Data_Tables\\Think_Tank' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-think-tank.php',
         'Site_Functionality\\Integrations\\Integrations' => __DIR__ . '/../..' . '/src/app/integrations/class-integrations.php',
         'Site_Functionality\\Integrations\\WP_Import\\Actions' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/class-actions.php',
         'Site_Functionality\\Settings' => __DIR__ . '/../..' . '/src/class-settings.php',
@@ -70,10 +75,10 @@ class ComposerStaticInit5aaf75406038386c7036960a9cdb1020
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit5aaf75406038386c7036960a9cdb1020::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInitf147f25c507539ec9846c5fde74dd04a::$classMap;
 
         }, null, ClassLoader::class);
     }

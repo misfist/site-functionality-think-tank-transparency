@@ -39,9 +39,9 @@ class Think_Tank extends Taxonomy {
 		'show_in_nav_menus' => false,
 		'show_tagcloud'     => false,
 		'show_in_rest'      => true,
-		'has_archive'       => true,
+		'has_archive'       => false,
 		'meta_box_cb'       => 'post_categories_meta_box',
-		'rest_base'         => 'think-tanks',
+		'rest_base'         => 'think_tank-terms',
 	);
 
 	/**
@@ -53,6 +53,7 @@ class Think_Tank extends Taxonomy {
 		parent::init();
 
 		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
+		\add_filter( 'query_vars', array( $this, 'register_query_vars' ) );
 	}
 
 	/**
@@ -63,6 +64,19 @@ class Think_Tank extends Taxonomy {
 	 * @return void
 	 */
 	public function rewrite_rules(): void {}
+
+	/**
+	 * Register query vars
+	 * 
+	 * @link https://developer.wordpress.org/reference/hooks/query_vars/
+	 *
+	 * @param  array $query_vars
+	 * @return array
+	 */
+	public function register_query_vars( array $query_vars ) : array {
+		$query_vars[] = 'think-tank';
+		return $query_vars;
+	}
 
 	/**
 	 * Set Post Order

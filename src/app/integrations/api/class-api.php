@@ -7,6 +7,13 @@
 
 namespace Site_Functionality\Integrations\API;
 
+use Site_Functionality\Integrations\Data_Tables\Think_Tank;
+use Site_Functionality\Integrations\Data_Tables\Donor;
+use function Site_Functionality\Integrations\Data_Tables\get_think_tank_archive_data;
+use function Site_Functionality\Integrations\Data_Tables\get_donors_data;
+use function Site_Functionality\Integrations\Data_Tables\get_single_think_tank_data;
+use function Site_Functionality\Integrations\Data_Tables\get_donor_data;
+
 /**
  * Class API
  *
@@ -27,12 +34,12 @@ class API {
 	public function __construct() {
 		$this->settings = array(
 			'namespace'              => 'site-functionality/v1',
-			'endpoint'               => '/transactions',
+			'endpoint'               => '/transaction-data',
 			'taxonomies'             => array(
-				'donor',
-				'think_tank',
-				'donation_year',
-				'donor_type',
+				'donors',
+				'think-tanks',
+				'years',
+				'donor-types',
 			),
 			'meta_keys'              => array(
 				// 'donor_name',
@@ -49,6 +56,14 @@ class API {
 				// 'think_tank_id',
 			),
 			'default_posts_per_page' => 200,
+			'table_types'            => array(
+				'single-think-tank',
+				'single-donor',
+				'think-tank-archive',
+				'donor-archive',
+				'top-10',
+			),
+			'default_table_type'     => 'single-think-tank',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_rest_route' ) );
@@ -68,6 +83,18 @@ class API {
 				'permission_callback' => '__return_true',
 			)
 		);
+
+		register_rest_route(
+			$this->settings['namespace'],
+			'data-table',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'handle_rest_request' ),
+				'args'                => $this->get_rest_route_args(),
+				'permission_callback' => '__return_true',
+			)
+		);
+
 	}
 
 	/**
@@ -78,6 +105,12 @@ class API {
 	private function get_rest_route_args() {
 		$args = array();
 		foreach ( $this->settings['taxonomies'] as $taxonomy ) {
+			$args[ "{$taxonomy}" ]      = array(
+				'required'          => false,
+				'validate_callback' => function( $param, $request, $key ) {
+					return is_string( $param ) || is_array( $param );
+				},
+			);
 			$args[ "{$taxonomy}_name" ] = array(
 				'required'          => false,
 				'validate_callback' => function( $param, $request, $key ) {
@@ -106,6 +139,14 @@ class API {
 				return is_numeric( $param ) && $param > 0;
 			},
 		);
+
+		$args['table_type'] = array(
+			'required'          => false,
+			'default'           => $this->settings['default_table_type'],
+			'validate_callback' => function( $param, $request, $key ) {
+				return is_string( $param );
+			},
+		);
 		return $args;
 	}
 
@@ -116,97 +157,126 @@ class API {
 	 * @return \WP_REST_Response The response containing the post data.
 	 */
 	public function handle_rest_request( \WP_REST_Request $request ) {
-		$args = array(
-			'post_type'      => 'transaction',
-			'post_status'    => 'publish',
-			'tax_query'      => array(),
-			'meta_query'     => array(),
-			'orderby'        => $request->get_param( 'orderby' ) ?: 'date',
-			'order'          => $request->get_param( 'order' ) ?: 'DESC',
-			'paged'          => $request->get_param( 'page' ) ?: 1,
-			'posts_per_page' => $request->get_param( 'per_page' ) ?: $this->settings['default_posts_per_page'],
+		$params = array();
+
+		$params['table_type'] = ( $request->get_param( 'table_type' ) ) ? sanitize_text_field( $request->get_param( 'table_type' ) ) : $this->settings['default_table_type'];
+		$params['donor'] = ( $request->get_param( 'donors' ) ) ? sanitize_text_field( $request->get_param( 'donors' ) ) : '';
+		$params['think_tank'] = ( $request->get_param( 'think-tanks' ) ) ? sanitize_text_field( $request->get_param( 'think-tanks' ) ) : '';
+		$params['donation_year'] = ( $request->get_param( 'years' ) ) ? sanitize_text_field( $request->get_param( 'years' ) ) : '';
+		$params['donor_type'] = ( $request->get_param( 'donor-types' ) ) ? sanitize_text_field( $request->get_param( 'donor-types' ) ) : '';
+		$data = array();
+		
+		$route = $request->get_route();
+		$route_array = explode( '/', $route );
+
+		if( 'transaction-data' === end( $route_array ) ) {
+			// $data = $this->get_table_data( $params );
+		} elseif( 'data-table' === end( $route_array ) ) {
+			// $data = $this->get_data_table( $params );
+		}
+
+		return new \WP_REST_Response( $data, 200 );
+	}
+
+		/**
+	 * Get data table
+	 *
+	 * @param  array $params
+	 * @return array
+	 */
+	public function get_table_data( $params = array() ) : array {
+		$table_type = ( isset( $params['table_type'] ) ) ? sanitize_text_field( $params['table_type'] ) : sanitize_text_field( $this->settings['default_table_type'] );
+		$donor = ( isset( $params['donor'] ) ) ? sanitize_text_field( $params['donor'] ) : '';
+		$think_tank = ( isset( $params['think_tank'] ) ) ? sanitize_text_field( $params['think_tank'] ) : '';
+		$donation_year = ( isset( $params['donation_year'] ) ) ? sanitize_text_field( $params['donation_year'] ) : '';
+		$donor_type = ( isset( $params['donor_type'] ) ) ? sanitize_text_field( $params['donor_type'] ) : '';
+
+		$data = array();
+
+		if( $table_type ) {
+			$data['details']['table_type'] = $table_type;
+
+			switch ( $table_type ) {
+				case 'single-think-tank':
+					$data = \Site_Functionality\Integrations\Data_Tables\Think_Tank::get_single_think_tank_data( $think_tank, $donation_year, $donor_type );
+
+					break;
+				case 'single-donor':
+					$data = \Site_Functionality\Integrations\Data_Tables\Donor::get_single_donor_data( $donor, $donation_year, $donor_type );
+
+					break;
+				case 'think-tank-archive':
+					$data = \Site_Functionality\Integrations\Data_Tables\Think_Tank::get_think_tank_archive_data( $donation_year );
+					
+					break;
+				case 'donor-archive':
+					$data = \Site_Functionality\Integrations\Data_Tables\Donor::get_donor_archive_data( $donation_year, $donor_type );
+
+					break;
+				case 'top-10':
+					break;
+		
+				default:
+					$data = \Site_Functionality\Integrations\Data_Tables\Think_Tank::generate_think_tank_table( $think_tank, $donation_year, $donor_type );
+
+					break;
+			}
+
+		}
+		
+		return $data;
+	}
+
+	/**
+	 * Get data table
+	 *
+	 * @param  array $params
+	 * @return array
+	 */
+	public function get_data_table( $params = array() ) : array {
+		$table_type = ( isset( $params['table_type'] ) ) ? sanitize_text_field( $params['table_type'] ) : sanitize_text_field( $this->settings['default_table_type'] );
+		$donor = ( isset( $params['donor'] ) ) ? sanitize_text_field( $params['donor'] ) : '';
+		$think_tank = ( isset( $params['think_tank'] ) ) ? sanitize_text_field( $params['think_tank'] ) : '';
+		$donation_year = ( isset( $params['donation_year'] ) ) ? sanitize_text_field( $params['donation_year'] ) : '';
+		$donor_type = ( isset( $params['donor_type'] ) ) ? sanitize_text_field( $params['donor_type'] ) : '';
+
+		$data = array(
+			'details' => array()
 		);
 
-		$tax_query = array();
-		foreach ( $this->settings['taxonomies'] as $taxonomy ) {
-			$taxonomy_name_param = "{$taxonomy}_name";
-			$taxonomy_id_param   = "{$taxonomy}_id";
+		if( $table_type ) {
+			$data['details']['table_type'] = $table_type;
 
-			if ( $request->has_param( $taxonomy_name_param ) ) {
-				$terms       = $request->get_param( $taxonomy_name_param );
-				$tax_query[] = array(
-					'taxonomy'         => $taxonomy,
-					'field'            => 'name',
-					'terms'            => is_array( $terms ) ? $terms : array( $terms ),
-					'include_children' => is_taxonomy_hierarchical( $taxonomy ),
-				);
+			switch ( $table_type ) {
+				case 'single-think-tank':
+					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Think_Tank::generate_single_think_tank_table( $think_tank, $donation_year, $donor_type );
+
+					break;
+				case 'single-donor':
+					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Donor::generate_single_donor( $donor, $donation_year, $donor_type );
+
+					break;
+				case 'think-tank-archive':
+					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Think_Tank::generate_think_tank_archive_table( $donation_year );
+					
+					break;
+				case 'donor-archive':
+					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Donor::generate_donor_archive( $donation_year, $donor_type );
+
+					break;
+				case 'top-10':
+					break;
+		
+				default:
+					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Think_Tank::generate_think_tank_table( $think_tank, $donation_year, $donor_type );
+
+					break;
 			}
 
-			if ( $request->has_param( $taxonomy_id_param ) ) {
-				$terms = $this->get_term_ids_by_post_id( (int) $request->get_param( $taxonomy_id_param ), $taxonomy );
-				$tax_query[] = array(
-					'taxonomy' => $taxonomy,
-					'field'    => 'term_id',
-					'terms'    => $terms,
-				);
-			}
+			return $data;
 		}
 
-		if ( ! empty( $tax_query ) ) {
-			$args['tax_query'] = $tax_query;
-		}
-
-		$meta_query = array();
-		foreach ( $this->settings['meta_keys'] as $meta_key ) {
-			if ( $request->has_param( $meta_key ) ) {
-				$meta_query[] = array(
-					'key'   => $meta_key,
-					'value' => $request->get_param( $meta_key ),
-				);
-			}
-		}
-
-		if ( ! empty( $meta_query ) ) {
-			$args['meta_query'] = $meta_query;
-		}
-
-		$query = new \WP_Query( $args );
-
-		$post_data = array();
-		foreach ( $query->posts as $post ) {
-            if( ! has_term( '', 'donor', $post->ID ) ) {
-                continue;
-            }
-
-			$post_data_item = array(
-				'ID' => $post->ID,
-			);
-
-			foreach ( $this->settings['taxonomies'] as $taxonomy ) {
-                $terms = $this->get_taxonomy_terms( $post->ID, $taxonomy, array( 'fields' => 'all' ) );
-                // $term_slugs = $this->get_taxonomy_terms( $post->ID, $taxonomy, array( 'fields' => 'slugs' ) );
-                if( $terms ) {
-                    if( 'donor' === $taxonomy ) {
-                        $post_data_item[ $taxonomy ] = end( $terms )->name;
-                        $post_data_item[ $taxonomy . '_parent' ] = $terms[0]->name;
-                        $post_data_item[ $taxonomy . '_slug' ] = $terms[0]->slug;
-                    } else {
-                        $post_data_item[ $taxonomy ] = $terms->name;
-                        $post_data_item[ $taxonomy . '_slug' ] = $terms->slug;
-                    }
-                } else {
-                    $post_data_item[ $taxonomy ] = '';
-                }
-			}
-
-			foreach ( $this->settings['meta_keys'] as $meta_key ) {
-				$post_data_item[ $meta_key ] = get_post_meta( $post->ID, $meta_key, true );
-			}
-
-			$post_data[] = $post_data_item;
-		}
-
-		return new \WP_REST_Response( $post_data, 200 );
+		$data['details']['table_type'] = esc_attr__( 'No table type provided.', 'data-tables' );
 	}
 
 	/**
@@ -217,27 +287,26 @@ class API {
 	 * @return array|string     Array of term names, a single term name, or an empty string.
 	 */
 	private function get_taxonomy_terms( $post_id, $taxonomy, $args = array() ) {
-        $defaults = array(
-            'taxonomy'   => $taxonomy,
-            'object_ids' => array( $post_id ),
-            'fields'     => 'names',
-            'orderby'    => 'term_order',
-        );
-        
-        $args     = wp_parse_args( $args, $defaults );
+		$defaults = array(
+			'taxonomy'   => $taxonomy,
+			'object_ids' => array( $post_id ),
+			'fields'     => 'names',
+			'orderby'    => 'term_order',
+		);
 
-        $terms = get_terms( $args );
+		$args = wp_parse_args( $args, $defaults );
 
-        if ( is_wp_error( $terms ) || empty( $terms ) ) {
+		$terms = get_terms( $args );
+
+		if ( is_wp_error( $terms ) || empty( $terms ) ) {
 			return '';
 		}
 
-        if ( is_taxonomy_hierarchical( $taxonomy ) ) {
-            return $terms;
-        }
-        else {
-            return $terms[0];
-        }
+		if ( is_taxonomy_hierarchical( $taxonomy ) ) {
+			return $terms;
+		} else {
+			return $terms[0];
+		}
 
 		if ( is_taxonomy_hierarchical( $taxonomy ) ) {
 			$defaults = array(
@@ -246,8 +315,6 @@ class API {
 				'fields'     => 'names',
 				'orderby'    => 'term_order',
 			);
-			
-
 
 			if ( is_wp_error( $terms ) ) {
 				return '';
@@ -260,11 +327,11 @@ class API {
 	/**
 	 * Retrieves records whose 'think_tank' taxonomy term matches the current post.
 	 *
-	 * @param int $think_tank_id The ID of the 'think_tank' taxonomy term.
+	 * @param int $think_tank_ The slug of the 'think_tank' taxonomy term.
 	 * @return array Array of matching records.
 	 */
-	public function get_records_by_think_tank( $think_tank_id ) {
-		return $this->get_data( array( 'think_tank_id' => $think_tank_id ) );
+	public function get_records_by_think_tank( $think_tank ) {
+		return $this->get_data( array( 'think_tank' => $think_tank ) );
 	}
 
 	/**
@@ -284,17 +351,17 @@ class API {
 	 * @return array Array of matching records.
 	 */
 	public function get_records_by_donor_name( $donor_name ) {
-		return $this->get_data( array( 'donor' => $donor_name ) );
+		return $this->get_data( array( 'donor_name' => $donor_name ) );
 	}
 
 	/**
 	 * Retrieves records whose 'donor' taxonomy term matches the current post.
 	 *
-	 * @param int $donor_id The ID of the 'donor' taxonomy term.
+	 * @param int $donor The slug of the 'donor' taxonomy term.
 	 * @return array Array of matching records.
 	 */
-	public function get_records_by_donor( $donor_id ) {
-		return $this->get_data( array( 'donor_id' => $donor_id ) );
+	public function get_records_by_donor( $donor ) {
+		return $this->get_data( array( 'donor' => $donor ) );
 	}
 
 	/**
@@ -306,6 +373,28 @@ class API {
 	public static function get_donors_by_name( $donor_name ) {
 		$instance = new self();
 		return $instance->get_data( array( 'donor_name' => $donor_name ) );
+	}
+
+	/**
+	 * Retrieves records whose 'donor' taxonomy term matches the given name.
+	 *
+	 * @param string $donor The slug of the 'donor' taxonomy term.
+	 * @return array Array of matching records.
+	 */
+	public static function get_donors_by_slug( $donor_slug ) {
+		$instance = new self();
+		return $instance->get_data( array( 'donor' => $donor_slug ) );
+	}
+
+	/**
+	 * Retrieves records whose 'think_tank' taxonomy term matches the given name.
+	 *
+	 * @param string $think_tank_slug The slug of the 'think_tank' taxonomy term.
+	 * @return array Array of matching records.
+	 */
+	public static function get_think_tanks_by_slug( $think_tank_slug ) {
+		$instance = new self();
+		return $instance->get_data( array( 'think_tank' => $think_tank_slug ) );
 	}
 
 	/**
@@ -331,12 +420,12 @@ class API {
 		return array_sum( wp_list_pluck( $data, 'amount_calc' ) );
 	}
 
-		/**
-		 * Display data as an HTML table.
-		 *
-		 * @param array $data Array of data to display.
-		 * @return string HTML table of the data.
-		 */
+	/**
+	 * Display data as an HTML table.
+	 *
+	 * @param array $data Array of data to display.
+	 * @return string HTML table of the data.
+	 */
 	public static function display_table_data_think_tank( $data ) {
 		if ( empty( $data ) ) {
 			return '<p>' . esc_html__( 'No data available.', 'site-functionality' ) . '</p>';

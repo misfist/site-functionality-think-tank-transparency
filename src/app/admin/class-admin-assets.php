@@ -38,7 +38,7 @@ class Admin_Assets {
 	public function __construct( Settings $settings ) {
 		$this->settings = $settings;
 
-		$editor = new Editor( $this->settings );
+		$editor = new Editor();
 	}
 
 	/**
