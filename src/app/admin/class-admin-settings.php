@@ -107,6 +107,14 @@ class Admin_Settings extends Base {
 		);
 
 		add_settings_field(
+			'rows_per_page',
+			__( 'Number of Results', 'site-functionality' ),
+			array( $this, 'render_rows_per_page' ),
+			$this->option_name,
+			$this->option_name . '_section'
+		);
+
+		add_settings_field(
 			'think_tank_box_total',
 			__( 'Think Tank Data Box - Total Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_total' ),
@@ -399,6 +407,31 @@ class Admin_Settings extends Base {
 		<p class="description">
 			<?php esc_html_e( 'If a default year is selected, all data tables on the site will display data for that year by default.', 'site-functionality' ); ?>
 		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the Default Year field.
+	 *
+	 * Displays a select box populated with `donation_year` taxonomy terms, ordered by name in descending order.
+	 *
+	 * @return void
+	 */
+	public function render_rows_per_page(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['rows_per_page'] ) ? $options['rows_per_page'] : 25;
+		?>
+		<input type="number" list="rows-per-page" name="<?php echo esc_attr( $this->option_name ); ?>[rows_per_page]" value="<?php echo esc_attr( $value ); ?>"  step="1" min="5" max="100" class="small-text">
+		<p class="description">
+			<?php esc_html_e( 'The number of rows per page to display.', 'site-functionality' ); ?>
+		</p>
+
+		<datalist id="rows-per-page">
+			<option value="25"></option>
+			<option value="50"></option>
+			<option value="75"></option>
+			<option value="100"></option>
+		</datalist>
 		<?php
 	}
 
