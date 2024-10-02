@@ -61,7 +61,7 @@ class Admin_Settings extends Base {
 	 *
 	 * @return void
 	 */
-	public function add_admin_menu() {
+	public function add_admin_menu(): void {
 		add_options_page(
 			__( 'Site Settings', 'site-functionality' ),
 			__( 'Site Settings', 'site-functionality' ),
@@ -81,12 +81,19 @@ class Admin_Settings extends Base {
 	 *
 	 * @return void
 	 */
-	public function register_settings() {
+	public function register_settings(): void {
 		register_setting( $this->option_name . '_group', $this->option_name );
 
 		add_settings_section(
 			$this->option_name . '_section',
 			'',
+			null,
+			$this->option_name
+		);
+
+		add_settings_section(
+			$this->option_name . '_content_section',
+			__( 'Content', 'site-functionality' ),
 			null,
 			$this->option_name
 		);
@@ -100,11 +107,95 @@ class Admin_Settings extends Base {
 		);
 
 		add_settings_field(
+			'think_tank_box_total',
+			__( 'Think Tank Data Box - Total Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_box_total' ),
+			$this->option_name,
+			$this->option_name . '_content_section',
+			array(
+				'label_for' => 'think_tank_box_total',
+				'description'  => __( 'e.g. Minimum funding to date from', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_box_no_data',
+			__( 'Think Tank Data Box - No Data Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_box_no_data' ),
+			$this->option_name,
+			$this->option_name . '_content_section',
+			array(
+				'label_for' => 'think_tank_box_no_data',
+				'description'  => __( 'e.g. No data regarding donations from', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_box_not_accepted',
+			__( 'Think Tank Data Box - No Data Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_box_not_accepted' ),
+			$this->option_name,
+			$this->option_name . '_content_section',
+			array(
+				'label_for' => 'think_tank_box_not_accepted',
+				'description'  => __( 'e.g. Did not accept any donations from', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_all_no_data',
+			__( 'Think Tank Data All - No Donation Info Available', 'site-functionality' ),
+			array( $this, 'render_think_tank_all_no_data' ),
+			$this->option_name,
+			$this->option_name . '_content_section',
+			array(
+				'label_for' => 'think_tank_all_no_data',
+				'description'  => __( 'e.g. Did not accept any donations from', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_total_text',
+			__( 'Think Tank - Total Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_total_text' ),
+			$this->option_name,
+			$this->option_name . '_content_section',
+			array(
+				'label_for' => 'think_tank_total_text',
+				'description'  => __( 'e.g. Minimum amount received', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_no_data_text',
+			__( 'Think Tank - No Data Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_no_data_text' ),
+			$this->option_name,
+			$this->option_name . '_content_section',
+			array(
+				'label_for' => 'think_tank_no_data_text',
+				'description'  => __( 'e.g. This think tank has not provided data regarding its donations.', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'donor_total_text',
+			__( 'Donor - Total Text', 'site-functionality' ),
+			array( $this, 'render_donor_total_text' ),
+			$this->option_name,
+			$this->option_name . '_content_section',
+			array(
+				'label_for' => 'donor_total_text',
+				'description'  => __( 'e.g. Minimum contributions', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
 			'data_note',
 			__( 'Data Note', 'site-functionality' ),
 			array( $this, 'render_data_note' ),
 			$this->option_name,
-			$this->option_name . '_section'
+			$this->option_name . '_content_section'
 		);
 	}
 
@@ -115,7 +206,7 @@ class Admin_Settings extends Base {
 	 *
 	 * @return void
 	 */
-	public function render_settings_page() {
+	public function render_settings_page(): void {
 		if ( ! current_user_can( $this->capability ) ) {
 			return;
 		}
@@ -141,7 +232,7 @@ class Admin_Settings extends Base {
 	 *
 	 * @return void
 	 */
-	public function render_data_note() {
+	public function render_data_note(): void {
 		$options   = get_option( $this->option_name );
 		$data_note = isset( $options['data_note'] ) ? $options['data_note'] : '';
 
@@ -163,13 +254,125 @@ class Admin_Settings extends Base {
 	}
 
 	/**
+	 * Outputs the HTML for the Data Note field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_box_total(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['think_tank_box_total'] ) ? $options['think_tank_box_total'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_box_total]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'e.g. Minimum funding to date from', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_box_no_data(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['think_tank_box_no_data'] ) ? $options['think_tank_box_no_data'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_box_no_data]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'e.g. No data regarding donations from', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_box_not_accepted(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['think_tank_box_not_accepted'] ) ? $options['think_tank_box_not_accepted'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_box_not_accepted]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'e.g. Did not accept any donations from', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_all_no_data(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['think_tank_all_no_data'] ) ? $options['think_tank_all_no_data'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_all_no_data]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'e.g. No donation data available from this think tank.', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_total_text(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['think_tank_total_text'] ) ? $options['think_tank_total_text'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_total_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'e.g. Minimum amount received', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function think_tank_no_data_text(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['tank_no_data_text'] ) ? $options['tank_no_data_text'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[tank_no_data_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'e.g. This think tank has not provided data regarding its donations.', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_donor_total_text(): void {
+		$options   = get_option( $this->option_name );
+		$value = isset( $options['donor_total_text'] ) ? $options['donor_total_text'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[donor_total_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'e.g. Minimum contributions', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
 	 * Outputs the HTML for the Default Year field.
 	 *
 	 * Displays a select box populated with `donation_year` taxonomy terms, ordered by name in descending order.
 	 *
 	 * @return void
 	 */
-	public function render_default_year() {
+	public function render_default_year(): void {
 		$options       = get_option( $this->option_name );
 		$selected_year = isset( $options['default_year'] ) ? $options['default_year'] : '';
 
