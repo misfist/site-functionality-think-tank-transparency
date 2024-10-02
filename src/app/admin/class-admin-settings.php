@@ -154,7 +154,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_box_not_accepted',
-			__( 'Data Box - No Data Text', 'site-functionality' ),
+			__( 'Data Box - No Donations Accepted Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_not_accepted' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
