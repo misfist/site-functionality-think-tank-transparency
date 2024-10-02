@@ -130,7 +130,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_box_total',
-			__( 'Think Tank Data Box - Total Text', 'site-functionality' ),
+			__( 'Data Box - Total Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_total' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
@@ -142,7 +142,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_box_no_data',
-			__( 'Think Tank Data Box - No Data Text', 'site-functionality' ),
+			__( 'Data Box - No Data Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_no_data' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
@@ -154,7 +154,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_box_not_accepted',
-			__( 'Think Tank Data Box - No Data Text', 'site-functionality' ),
+			__( 'Data Box - No Data Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_not_accepted' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
@@ -166,7 +166,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_all_no_data',
-			__( 'Think Tank Data All - No Donation Info Available', 'site-functionality' ),
+			__( 'Data All - No Donation Info Available', 'site-functionality' ),
 			array( $this, 'render_think_tank_all_no_data' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
@@ -178,7 +178,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_total_text',
-			__( 'Think Tank - Total Text', 'site-functionality' ),
+			__( 'Total Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_total_text' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
@@ -190,7 +190,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_no_data_text',
-			__( 'Think Tank - No Data Text', 'site-functionality' ),
+			__( 'No Data Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_no_data_text' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
@@ -202,7 +202,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'donor_total_text',
-			__( 'Donor - Total Text', 'site-functionality' ),
+			__( 'Total Text', 'site-functionality' ),
 			array( $this, 'render_donor_total_text' ),
 			$this->option_name,
 			$this->option_name . '_content_donor_section',
