@@ -141,18 +141,6 @@ class Admin_Settings extends Base {
 		);
 
 		add_settings_field(
-			'think_tank_box_no_data',
-			__( 'Data Box - No Data Text', 'site-functionality' ),
-			array( $this, 'render_think_tank_box_no_data' ),
-			$this->option_name,
-			$this->option_name . '_content_think_tank_section',
-			array(
-				'label_for' => 'think_tank_box_no_data',
-				'description'  => __( 'e.g. No data regarding donations from', 'site-functionality' ),
-			)
-		);
-
-		add_settings_field(
 			'think_tank_box_not_accepted',
 			__( 'Data Box - No Donations Accepted Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_not_accepted' ),
@@ -166,13 +154,13 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_all_no_data',
-			__( 'Data All - No Donation Info Available', 'site-functionality' ),
+			__( 'No Donation Info Available', 'site-functionality' ),
 			array( $this, 'render_think_tank_all_no_data' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
 			array(
 				'label_for' => 'think_tank_all_no_data',
-				'description'  => __( 'e.g. Did not accept any donations from', 'site-functionality' ),
+				'description'  => __( 'e.g. No donation data available from this think tank.', 'site-functionality' ),
 			)
 		);
 
