@@ -118,6 +118,8 @@ function set_transaction_data( int $post_id ) : void {
 		return;
 	}
 	set_transaction_donor_data( $post_id );
+	$message = sprintf( '%s run for post ID %d.', esc_attr( __NAMESPACE__ . '\set_transaction_data' ), $post_id );
+	error_log( $message );
 	// set_transaction_think_tank_data( $post_id );
 	// set_transaction_year_data( $post_id );
 }
@@ -139,11 +141,15 @@ function set_transaction_donor_data( int $post_id ): void {
 	$donor_taxonomy        = $donor_post_type;
 
 	if ( $transaction_post_type !== get_post_type( $post_id ) ) {
+		$message = sprintf( 'post ID %d is not .', $post_id, esc_attr( $transaction_post_type ) );
+		error_log( $message );
 		return;
 	}
 
-	$donor_name = get_post_meta( $post_id, 'donor', true );
+	$donor_name = get_post_meta( $post_id, 'donor_name', true );
 	if ( ! $donor_name ) {
+		$message = sprintf( 'No donor name set for post ID %d.', $post_id );
+		error_log( $message );
 		return;
 	}
 
@@ -170,7 +176,7 @@ function set_transaction_donor_data( int $post_id ): void {
 		}
 
 		$donor_type_terms = wp_get_post_terms( $donor_parent_id, $donor_type_taxonomy, array( 'fields' => 'ids' ) );
-		$donor_terms      = wp_get_post_terms( $donor_parent_id, $donor_post_type, array( 'fields' => 'ids' ) );
+		$donor_terms      = wp_get_post_terms( $donor_parent_id, $donor_post_type, array( 'fields' => 'ids', 'orderby' => 'parent' ) );
 
 		$post_data = array(
 			'ID'         => $post_id,
@@ -185,7 +191,17 @@ function set_transaction_donor_data( int $post_id ): void {
 			),
 		);
 
-		wp_update_post( $post_data );
+		$return = wp_update_post( $post_data );
+
+		if( $return ) {
+			$message = sprintf( '%s set for post ID %d.', json_encode( $post_data ), $post_id );
+		} else {
+			$message = sprintf( 'Error: data not set for post ID %d.', $post_id );
+		}
+		error_log( $message );
+	} else {
+		$message = sprintf( 'No donor post found for donor name %s.', $donor_name );
+		error_log( $message );
 	}
 }
 
