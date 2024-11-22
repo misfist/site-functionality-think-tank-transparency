@@ -160,6 +160,18 @@ class Admin_Settings extends Base {
 		);
 
 		add_settings_field(
+			'think_tank_box_no_data',
+			__( 'Donor Type Boxes - No Donation Data Available', 'site-functionality' ),
+			array( $this, 'render_think_tank_box_no_data' ),
+			$this->option_name,
+			$this->option_name . '_content_think_tank_section',
+			array(
+				'label_for'   => 'think_tank_box_no_data',
+				'description' => __( 'e.g. No dononation data available for', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
 			'think_tank_all_no_data',
 			__( 'No Donation Info Available', 'site-functionality' ),
 			array( $this, 'render_think_tank_all_no_data' ),
@@ -192,6 +204,30 @@ class Admin_Settings extends Base {
 			array(
 				'label_for'   => 'think_tank_no_data_text',
 				'description' => __( 'e.g. This think tank has not provided data regarding its donations.', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_none_accepted_text',
+			__( 'None Accepted Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_none_accepted_text' ),
+			$this->option_name,
+			$this->option_name . '_content_think_tank_section',
+			array(
+				'label_for'   => 'think_tank_none_accepted_text',
+				'description' => __( 'e.g. This think tank does not accept donations from any of the donor types.', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_is_transparent_text',
+			__( 'Is Transparent Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_is_transparent_text' ),
+			$this->option_name,
+			$this->option_name . '_content_think_tank_section',
+			array(
+				'label_for'   => 'think_tank_is_transparent_text',
+				'description' => __( 'e.g. Think tank doesn\'t accept donations from any of the donor types and has transparency score 4+.', 'site-functionality' ),
 			)
 		);
 
@@ -398,6 +434,38 @@ class Admin_Settings extends Base {
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_no_data_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
 			<?php esc_html_e( 'Displays on single think tank when no donation data is available (in place of table).', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_none_accepted_text(): void {
+		$options = get_option( $this->option_name );
+		$value   = isset( $options['think_tank_none_accepted_text'] ) ? $options['think_tank_none_accepted_text'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_none_accepted_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'Displays on single think thank when donations aren\'t accepted for any of the donor types (in place of table). ', 'site-functionality', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+		/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_is_transparent_text(): void {
+		$options = get_option( $this->option_name );
+		$value   = isset( $options['think_tank_is_transparent_text'] ) ? $options['think_tank_is_transparent_text'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_is_transparent_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'Displays on single think thank when donations aren\'t accepted for any of the donor types and has transparency score 4+ (in place of table). ', 'site-functionality', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
