@@ -813,7 +813,9 @@ function get_transaction_years_by_term( $taxonomy, $term_name ) {
 
 		foreach ( $transaction_posts as $post_id ) {
 			$post_year_terms = wp_get_post_terms( $post_id, $year_taxonomy, array( 'fields' => 'names' ) );
-			$years = array_merge( $years, $post_year_terms );
+			foreach ( $post_year_terms as $term ) {
+                $years[] = $term; // Append terms directly
+            }
 		}
 
 		// Move to the next page
