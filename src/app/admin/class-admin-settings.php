@@ -119,13 +119,13 @@ class Admin_Settings extends Base {
 			$this->option_name
 		);
 
-		add_settings_field(
-			'default_year',
-			__( 'Default Year', 'site-functionality' ),
-			array( $this, 'render_default_year' ),
-			$this->option_name,
-			$this->option_name . '_section'
-		);
+		// add_settings_field(
+		// 	'default_year',
+		// 	__( 'Default Year', 'site-functionality' ),
+		// 	array( $this, 'render_default_year' ),
+		// 	$this->option_name,
+		// 	$this->option_name . '_section'
+		// );
 
 		add_settings_field(
 			'rows_per_page',
@@ -137,7 +137,7 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_box_total',
-			__( 'Data Box - Total Text', 'site-functionality' ),
+			__( 'Donor Type Boxes - Total Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_total' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
@@ -149,13 +149,25 @@ class Admin_Settings extends Base {
 
 		add_settings_field(
 			'think_tank_box_not_accepted',
-			__( 'Data Box - No Donations Accepted Text', 'site-functionality' ),
+			__( 'Donor Type Boxes - No Donations Accepted Text', 'site-functionality' ),
 			array( $this, 'render_think_tank_box_not_accepted' ),
 			$this->option_name,
 			$this->option_name . '_content_think_tank_section',
 			array(
 				'label_for'   => 'think_tank_box_not_accepted',
 				'description' => __( 'e.g. Did not accept any donations from', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_box_no_data',
+			__( 'Donor Type Boxes - No Donation Data Available', 'site-functionality' ),
+			array( $this, 'render_think_tank_box_no_data' ),
+			$this->option_name,
+			$this->option_name . '_content_think_tank_section',
+			array(
+				'label_for'   => 'think_tank_box_no_data',
+				'description' => __( 'e.g. No dononation data available for', 'site-functionality' ),
 			)
 		);
 
@@ -192,6 +204,30 @@ class Admin_Settings extends Base {
 			array(
 				'label_for'   => 'think_tank_no_data_text',
 				'description' => __( 'e.g. This think tank has not provided data regarding its donations.', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_none_accepted_text',
+			__( 'None Accepted Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_none_accepted_text' ),
+			$this->option_name,
+			$this->option_name . '_content_think_tank_section',
+			array(
+				'label_for'   => 'think_tank_none_accepted_text',
+				'description' => __( 'e.g. This think tank does not accept donations from any of the donor types.', 'site-functionality' ),
+			)
+		);
+
+		add_settings_field(
+			'think_tank_is_transparent_text',
+			__( 'Is Transparent Text', 'site-functionality' ),
+			array( $this, 'render_think_tank_is_transparent_text' ),
+			$this->option_name,
+			$this->option_name . '_content_think_tank_section',
+			array(
+				'label_for'   => 'think_tank_is_transparent_text',
+				'description' => __( 'e.g. Think tank doesn\'t accept donations from any of the donor types and has transparency score 4+.', 'site-functionality' ),
 			)
 		);
 
@@ -317,7 +353,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_box_total]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'e.g. Minimum funding to date from', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays on a single think tank, total min donation amount for specific donor type.', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -333,7 +369,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_box_no_data]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'e.g. No data regarding donations from', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays on single think tank, when no data is available for a specific donor type (in place of total min amount for donor type).', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -349,7 +385,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_box_not_accepted]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'e.g. Did not accept any donations from', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays on single think tank when donations aren\'t accepted for a specific donor type  (in place of total min amount for donor type). ', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -365,7 +401,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_all_no_data]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'e.g. No donation data available from this think tank.', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays on single think tank when no donation data is available for any of the donor types (in place of individual donor type boxes).', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -381,7 +417,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_total_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'e.g. Minimum amount received', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays on single think tank, next to the total min donation amount.', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -397,7 +433,39 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_no_data_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'e.g. This think tank has not provided data regarding its donations.', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays on single think tank when no donation data is available (in place of table).', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_none_accepted_text(): void {
+		$options = get_option( $this->option_name );
+		$value   = isset( $options['think_tank_none_accepted_text'] ) ? $options['think_tank_none_accepted_text'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_none_accepted_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'Displays on single think thank when donations aren\'t accepted for any of the donor types (in place of table). ', 'site-functionality', 'site-functionality' ); ?>
+		</p>
+		<?php
+	}
+
+		/**
+	 * Outputs the HTML for the field.
+	 *
+	 * @return void
+	 */
+	public function render_think_tank_is_transparent_text(): void {
+		$options = get_option( $this->option_name );
+		$value   = isset( $options['think_tank_is_transparent_text'] ) ? $options['think_tank_is_transparent_text'] : '';
+		?>
+		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[think_tank_is_transparent_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
+		<p class="description">
+			<?php esc_html_e( 'Displays on single think thank when donations aren\'t accepted for any of the donor types and has transparency score 4+ (in place of table). ', 'site-functionality', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -413,7 +481,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[donor_total_text]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'e.g. Minimum contributions', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays on single donor next to total min amount donated.', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -429,7 +497,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[no_data]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'Text that displays in place of amount when think tank does not accept donations from this type of donor.', 'site-functionality', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays in tables in place of amount when actual amount is not known.', 'site-functionality', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -445,7 +513,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[not_accepted]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'Text that displays in place of amount when think tank does not accept donations from this type of donor.', 'site-functionality', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays in tables in place of amount when think tank does not accept donations from this type of donor.', 'site-functionality', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}
@@ -461,7 +529,7 @@ class Admin_Settings extends Base {
 		?>
 		<input type="text" name="<?php echo esc_attr( $this->option_name ); ?>[unknown_amount]" value="<?php echo esc_attr( $value ); ?>" class="large-text">
 		<p class="description">
-			<?php esc_html_e( 'Text that displays in amount when specific donation amount is unknown.', 'site-functionality' ); ?>
+			<?php esc_html_e( 'Displays in tables in place of amount when specific donation amount is unknown.', 'site-functionality' ); ?>
 		</p>
 		<?php
 	}

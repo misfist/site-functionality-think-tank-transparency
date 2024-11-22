@@ -466,6 +466,7 @@ class Actions extends Base {
 		$amount_min  = wp_list_pluck( $data, 'amount_min' );
 		$amount_max  = wp_list_pluck( $data, 'amount_max' );
 		$amount_calc = wp_list_pluck( $data, 'amount_calc' );
+		$disclosed   = wp_list_pluck( $data, 'disclosed' );
 		$years       = array_filter(
 			array_unique( wp_list_pluck( $data, 'year' ) ),
 			function ( $year ) {
