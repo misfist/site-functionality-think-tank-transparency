@@ -714,6 +714,58 @@ function get_cumulative_value_by_taxonomy( array $taxonomies, string $meta_key )
  * @param string $term_name The name of the taxonomy term.
  * @return array List of 'donation_year' taxonomy term names.
  */
+// function get_transaction_years_by_term( $taxonomy, $term_name ) {
+// 	$year_taxonomy = 'donation_year';
+
+// 	$tax_query = array(
+// 		array(
+// 			'taxonomy' => $taxonomy,
+// 			'field'    => 'name',
+// 			'terms'    => $term_name,
+// 		),
+// 	);
+
+// 	if ( is_taxonomy_hierarchical( $taxonomy ) ) {
+// 		$term = get_term_by( 'name', $term_name, $taxonomy );
+// 		if ( $term ) {
+// 			$tax_query = array(
+// 				array(
+// 					'taxonomy' => $taxonomy,
+// 					'field'    => 'term_id',
+// 					'terms'    => $term->term_id,
+// 				),
+// 			);
+// 		} else {
+// 			$tax_query = array();
+// 		}
+// 	}
+
+// 	$args = array(
+// 		'post_type'      => 'transaction',
+// 		'posts_per_page' => -1,
+// 		'tax_query'      => $tax_query,
+// 		'fields'         => 'ids',
+// 	);
+
+// 	$transaction_posts = get_posts( $args );
+
+// 	$years = array();
+
+// 	if ( ! empty( $transaction_posts ) ) {
+// 		$years = array_reduce(
+// 			$transaction_posts,
+// 			function( $carry, $post_id ) use ( $year_taxonomy ) {
+// 				$post_year_terms = wp_get_post_terms( $post_id, $year_taxonomy, array( 'fields' => 'names' ) );
+// 				return array_merge( $carry, $post_year_terms );
+// 			},
+// 			array()
+// 		);
+
+// 		$years = array_unique( $years );
+// 	}
+
+// 	return $years;
+// }
 function get_transaction_years_by_term( $taxonomy, $term_name ) {
 	$year_taxonomy = 'donation_year';
 
@@ -742,30 +794,38 @@ function get_transaction_years_by_term( $taxonomy, $term_name ) {
 
 	$args = array(
 		'post_type'      => 'transaction',
-		'posts_per_page' => -1,
+		'posts_per_page' => 200, // Process in batches
 		'tax_query'      => $tax_query,
 		'fields'         => 'ids',
+		'paged'          => 1,
 	);
 
-	$transaction_posts = get_posts( $args );
-
 	$years = array();
+	$query_finished = false;
 
-	if ( ! empty( $transaction_posts ) ) {
-		$years = array_reduce(
-			$transaction_posts,
-			function( $carry, $post_id ) use ( $year_taxonomy ) {
-				$post_year_terms = wp_get_post_terms( $post_id, $year_taxonomy, array( 'fields' => 'names' ) );
-				return array_merge( $carry, $post_year_terms );
-			},
-			array()
-		);
+	while ( ! $query_finished ) {
+		$transaction_posts = get_posts( $args );
 
-		$years = array_unique( $years );
+		if ( empty( $transaction_posts ) ) {
+			$query_finished = true;
+			break;
+		}
+
+		foreach ( $transaction_posts as $post_id ) {
+			$post_year_terms = wp_get_post_terms( $post_id, $year_taxonomy, array( 'fields' => 'names' ) );
+			$years = array_merge( $years, $post_year_terms );
+		}
+
+		// Move to the next page
+		$args['paged']++;
 	}
+
+	$years = array_unique( $years );
+	sort( $years );
 
 	return $years;
 }
+
 
 /**
  * Get cumulative values for posts
