@@ -119,13 +119,13 @@ class Admin_Settings extends Base {
 			$this->option_name
 		);
 
-		add_settings_field(
-			'default_year',
-			__( 'Default Year', 'site-functionality' ),
-			array( $this, 'render_default_year' ),
-			$this->option_name,
-			$this->option_name . '_section'
-		);
+		// add_settings_field(
+		// 	'default_year',
+		// 	__( 'Default Year', 'site-functionality' ),
+		// 	array( $this, 'render_default_year' ),
+		// 	$this->option_name,
+		// 	$this->option_name . '_section'
+		// );
 
 		add_settings_field(
 			'rows_per_page',
