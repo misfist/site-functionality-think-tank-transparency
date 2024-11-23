@@ -47,6 +47,15 @@ class Think_Tank extends Post_Type {
 	public function init(): void {
 		parent::init();
 
+		$args        = array(
+			'taxonomy'   => 'donor_type',
+			'fields'     => 'slugs',
+			'hide_empty' => false,
+		);
+		$donor_types = get_terms( $args );
+		$this->data['donor_types'] = ( ! is_wp_error( $donor_types ) && ! empty( $donor_types ) ) ? $donor_types : array();
+		$donor_array = array_fill_keys( $this->data['donor_types'], 'string' );
+
 		$this->data['fields'] = array(
 			array(
 				'label'        => __( 'Transparency Score', 'site-functionality' ),
@@ -73,21 +82,21 @@ class Think_Tank extends Post_Type {
 				'label'        => __( 'Did Not Accept Pentagon Contractor Donations', 'site-functionality' ),
 				'key'          => 'no_defense_accepted',
 				'single'       => true,
-				'type'         => 'boolean',
+				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Did Not Accept Foreign Interest Donations', 'site-functionality' ),
 				'key'          => 'no_foreign_accepted',
 				'single'       => true,
-				'type'         => 'boolean',
+				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Did Not Accept US Government Donations', 'site-functionality' ),
 				'key'          => 'no_domestic_accepted',
 				'single'       => true,
-				'type'         => 'boolean',
+				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
@@ -148,21 +157,13 @@ class Think_Tank extends Post_Type {
 			),
 			array(
 				'label'        => __( 'Cumulative Data', 'site-functionality' ),
-				'key'          => 'cumulative_data',
+				'key'          => 'cumulative_amounts',
 				'single'       => true,
 				'type'         => 'array',
 				'show_in_rest' => array(
 					'schema' => array(
 						'type'  => 'array',
-						'items' => array(
-							'amount' => 'integer',
-							'amount_min' => 'integer',
-							'amount_max' => 'integer',
-							'amount_calc' => 'integer',
-							'amount_domestic' => 'integer',
-							'amount_foreign' => 'integer',
-							'amount_defense' => 'integer',
-						),
+						'items' => $donor_array,
 					),
 				),
 			),
@@ -181,31 +182,32 @@ class Think_Tank extends Post_Type {
 				'show_in_rest' => false,
 			),
 			// array(
-			// 	'label'        => __( 'Press Contact Email', 'site-functionality' ),
-			// 	'key'          => 'contact_email',
-			// 	'single'       => true,
-			// 	'type'         => 'string',
-			// 	'show_in_rest' => false,
+			// 'label'        => __( 'Press Contact Email', 'site-functionality' ),
+			// 'key'          => 'contact_email',
+			// 'single'       => true,
+			// 'type'         => 'string',
+			// 'show_in_rest' => false,
 			// ),
 			// array(
-			// 	'label'        => __( 'Press Contact Phone', 'site-functionality' ),
-			// 	'key'          => 'contact_phone',
-			// 	'single'       => true,
-			// 	'type'         => 'string',
-			// 	'show_in_rest' => false,
+			// 'label'        => __( 'Press Contact Phone', 'site-functionality' ),
+			// 'key'          => 'contact_phone',
+			// 'single'       => true,
+			// 'type'         => 'string',
+			// 'show_in_rest' => false,
 			// ),
 			// array(
-			// 	'label'        => __( 'Press Contact Other', 'site-functionality' ),
-			// 	'key'          => 'contact_other',
-			// 	'single'       => true,
-			// 	'type'         => 'string',
-			// 	'show_in_rest' => false,
+			// 'label'        => __( 'Press Contact Other', 'site-functionality' ),
+			// 'key'          => 'contact_other',
+			// 'single'       => true,
+			// 'type'         => 'string',
+			// 'show_in_rest' => false,
 			// ),
 		);
 
 		\add_action( 'init', array( $this, 'register_meta' ) );
 		\add_action( 'acf/init', array( $this, 'register_fields' ) );
 		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
+		\add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
 	}
 
 	/**
@@ -261,6 +263,73 @@ class Think_Tank extends Post_Type {
 				$query->set( 'order', 'ASC' );
 			}
 		}
+	}
+
+	/**
+	 * Add Meta Box
+	 *
+	 * @return void
+	 */
+	public function add_meta_box(): void {
+		$screens = array( self::POST_TYPE['id'] );
+		foreach ( $screens as $screen ) {
+			add_meta_box(
+				'post_meta_table',
+				esc_html__( 'Field Data', 'site-functionality' ),
+				array( $this, 'render_meta_box' ),
+				$screen
+			);
+		}
+	}
+
+	/**
+	 * Render table on post edit screen
+	 *
+	 * @param  \WP_Post $post
+	 * @return void
+	 */
+	public function render_meta_box( $post ): void {
+		$post_id              = $post->ID;
+		$amount               = get_post_meta( $post_id, 'amount_calc', true );
+		$amount_domestic      = get_post_meta( $post_id, 'amount_domestic', true );
+		$amount_foreign       = get_post_meta( $post_id, 'amount_foreign', true );
+		$amount_defense       = get_post_meta( $post_id, 'amount_defense', true );
+		$no_defense_accepted  = get_post_meta( $post_id, 'no_defense_accepted', true );
+		$no_domestic_accepted = get_post_meta( $post_id, 'no_domestic_accepted', true );
+		$no_foreign_accepted  = get_post_meta( $post_id, 'no_foreign_accepted', true );
+		$limited_info         = get_post_meta( $post_id, 'limited_info', true );
+		$transparency_score   = get_post_meta( $post_id, 'transparency_score', true );
+
+		?>
+		<table class="wp-block-table">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Min. Amount', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'Domestic', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'Foreign', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'Defense', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'No Defense', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'No Domestic', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'No Foreign', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'Limited Info', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'Transparency Score', 'site-functionality' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><?php esc_html_e( $amount, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $amount_domestic, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $amount_foreign, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $amount_defense, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $no_defense_accepted, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $no_domestic_accepted, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $no_foreign_accepted, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $limited_info, 'site-functionality' ); ?></td>
+					<td><?php esc_html_e( $transparency_score, 'site-functionality' ); ?></td>
+				</tr>
+			</tbody>
+		</table>
+		<?php
 	}
 
 }
