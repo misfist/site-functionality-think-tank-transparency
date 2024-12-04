@@ -90,6 +90,9 @@ abstract class Taxonomy extends Base {
 		if ( isset( static::TAXONOMY['query_var'] ) ) {
 			$args['query_var'] = static::TAXONOMY['query_var'];
 		}
+		if ( isset( static::TAXONOMY['meta_box_cb'] ) ) {
+			$args['meta_box_cb'] = static::TAXONOMY['meta_box_cb'];
+		}
 		\register_taxonomy(
 			static::TAXONOMY['id'],
 			static::TAXONOMY['post_types'],

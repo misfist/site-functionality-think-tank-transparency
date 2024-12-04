@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "data-tables/think-tank-table",
+  "version": "0.1.0",
+  "title": "Data Table",
+  "category": "widgets",
+  "icon": "bank",
+  "description": "Display table for a think tank.",
+  "attributes": {
+    "tableType": {
+      "type": "string",
+      "default": "think-tank-archive"
+    },
+    "thinkTank": {
+      "type": "string"
+    },
+    "donor": {
+      "type": "string"
+    },
+    "donationYear": {
+      "type": "string"
+    },
+    "donorType": {
+      "type": "string"
+    }
+  },
+  "example": {},
+  "supports": {
+    "interactivity": true
+  },
+  "textdomain": "data-tables",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php",
+  "viewScriptModule": "file:./view.js"
+}

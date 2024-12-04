@@ -46,8 +46,8 @@ abstract class Base {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct( $settings ) {
-		$this->settings = $settings;
+	public function __construct( $settings = array() ) {
+		// $this->settings = $settings;
 		$this->init();
 	}
 

@@ -16,8 +16,8 @@
  * Plugin URI:        https://github.com/misfist/rkc-plugin/
  * Description:       Custom WordPress functionality.
  * Version:           1.0.2
- * Requires PHP:      7.4
- * Requires at least: 6.4
+ * Requires PHP:      8.0
+ * Requires at least: 6.5
  * Author:            Pea
  * Author URI:        https://pealutz.me
  * License:           GPL-2.0+

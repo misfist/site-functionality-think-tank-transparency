@@ -32,8 +32,9 @@
             "Site_Functionality\\": "src/"
         },
         "files": [
-            "src/helpers.php"
-        ]
+            "src/functions.php",
+            "src/helpers.php",
+            "src/app/integrations/wp-import/functions.php"    ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -58,6 +59,7 @@
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "*",
         "kporras07/composer-symlinks": "dev-master",
+        "alleyinteractive/wordpress-autoloader": "^1.1",
         "phpcompatibility/phpcompatibility-wp": "*",
         "squizlabs/php_codesniffer": "*",
         "wp-cli/dist-archive-command": "dev-main",

@@ -20,6 +20,7 @@ use Site_Functionality\Common\WP_Includes\I18n;
 use Site_Functionality\App\Custom_Fields\Custom_Fields;
 use Site_Functionality\App\Post_Types\Post_Types;
 use Site_Functionality\App\Taxonomies\Taxonomies;
+use Site_Functionality\Integrations\Integrations;
 
 /**
  * Hooks the plugin's classes to WordPress's actions and filters.
@@ -78,7 +79,7 @@ class Site_Functionality {
 	 */
 	protected function define_admin_hooks(): void {
 
-		$admin_assets = new Admin_Assets( $this->settings );
+		$admin_assets = new Admin_Assets();
 
 		add_action( 'admin_enqueue_scripts', array( $admin_assets, 'enqueue_styles' ) );
 		add_action( 'admin_enqueue_scripts', array( $admin_assets, 'enqueue_scripts' ) );
@@ -93,7 +94,7 @@ class Site_Functionality {
 	 */
 	protected function define_frontend_hooks(): void {
 
-		$frontend_assets = new Frontend_Assets( $this->settings );
+		$frontend_assets = new Frontend_Assets();
 
 		add_action( 'wp_enqueue_scripts', array( $frontend_assets, 'enqueue_styles' ) );
 		add_action( 'wp_enqueue_scripts', array( $frontend_assets, 'enqueue_scripts' ) );
@@ -106,10 +107,11 @@ class Site_Functionality {
 	 * @since    1.0.0
 	 */
 	protected function load_dependencies(): void {
-		$post_types     = new Post_Types( $this->settings );
-		$taxonomies     = new Taxonomies( $this->settings );
-		$custom_fields  = new Custom_Fields( $this->settings );
-		$admin_settings = new Admin_Settings( $this->settings );
+		$post_types     = new Post_Types();
+		$taxonomies     = new Taxonomies();
+		$custom_fields  = new Custom_Fields();
+		$admin_settings = new Admin_Settings();
+		// $integrations   = new Integrations();
 	}
 
 }
