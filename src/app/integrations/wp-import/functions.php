@@ -316,43 +316,72 @@ function process_donors() : void {
  * @link https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_before_xml_import
  *
  * @param int $import_id The ID of the import process.
+ * @param int $batch_size The number of posts to delete in each batch. Default is 100.
  * @return void
  */
-function delete_posts( int $import_id ): void {
-	$taxonomy_map = array(
-		8 => 'transaction',
-		5 => 'donor',
-		4 => 'donor',
-		3 => 'think_tank',
-	);
+function delete_posts( int $import_id, int $batch_size = 100 ): void {
+    $taxonomy_map = array(
+        8 => 'transaction',
+        5 => 'donor',
+        4 => 'donor',
+        3 => 'think_tank',
+    );
 
-	if ( isset( $taxonomy_map[ $import_id ] ) ) {
-		$import = new \PMXI_Import_Record();
-		$import->getById( $import_id );
-		$import->deletePosts( true );
+    if ( isset( $taxonomy_map[ $import_id ] ) ) {
+        $import = new \PMXI_Import_Record();
+        $import->getById( $import_id );
+        $import->deletePosts( true );
 
-		$taxonomy = $taxonomy_map[ $import_id ];
-		$term_ids = get_terms(
-			array(
-				'taxonomy'   => $taxonomy,
-				'fields'     => 'ids',
-				'hide_empty' => false,
-			)
-		);
+        $post_type = $taxonomy_map[ $import_id ];
+        $post_ids = get_posts(
+            array(
+                'post_type'      => $post_type,
+                'posts_per_page' => -1,
+                'fields'         => 'ids',
+                'status'         => 'any',
+            )
+        );
 
-		if ( is_wp_error( $term_ids ) ) {
-			error_log( sprintf( 'Error retrieving terms for taxonomy %s: %s', $taxonomy, $term_ids->get_error_message() ) );
-			return;
-		}
+        if ( ! empty( $post_ids ) && ! is_wp_error( $post_ids ) ) {
+            error_log( sprintf( 'There are %d posts remaining to be deleted.', count( $post_ids ) ) );
 
-		foreach ( $term_ids as $term_id ) {
-			$deleted = wp_delete_term( $term_id, $taxonomy );
-			$message = $deleted
-				? sprintf( 'Term %d deleted from taxonomy %s.', $term_id, $taxonomy )
-				: sprintf( 'Failed to delete term %d from taxonomy %s.', $term_id, $taxonomy );
-			error_log( $message );
-		}
-	}
+            $post_batches = array_chunk( $post_ids, $batch_size );
+
+            foreach ( $post_batches as $batch ) {
+                foreach ( $batch as $post_id ) {
+                    wp_delete_post( $post_id, true );
+                }
+            }
+        }
+
+        $taxonomy = $taxonomy_map[ $import_id ];
+        $term_ids = get_terms(
+            array(
+                'taxonomy'   => $taxonomy,
+                'fields'     => 'ids',
+                'hide_empty' => false,
+            )
+        );
+
+        if ( is_wp_error( $term_ids ) ) {
+            error_log( sprintf( 'Error retrieving terms for taxonomy %s: %s', $taxonomy, $term_ids->get_error_message() ) );
+            return;
+        }
+
+        if ( ! empty( $term_ids ) ) {
+            $term_batches = array_chunk( $term_ids, $batch_size );
+
+            foreach ( $term_batches as $batch ) {
+                foreach ( $batch as $term_id ) {
+                    $deleted = wp_delete_term( $term_id, $taxonomy );
+                    $message = $deleted
+                        ? sprintf( 'Term %d deleted from taxonomy %s.', $term_id, $taxonomy )
+                        : sprintf( 'Failed to delete term %d from taxonomy %s.', $term_id, $taxonomy );
+                    error_log( $message );
+                }
+            }
+        }
+    }
 }
 
 /**
