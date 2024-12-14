@@ -13,8 +13,10 @@ use \WP_CLI as WP_CLI;
 use  Site_Functionality\App\Taxonomies\Taxonomies;
 
 add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_donor_parent', 10, 1 );
-add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_transaction_data', 10, 1 );
+add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_transaction_donor_data', 10, 1 );
 add_action( 'pmxi_after_xml_import', __NAMESPACE__ . '\set_cumulative_values', 10, 2 );
+add_action( 'pmxi_before_delete_post', __NAMESPACE__ . '\delete_post_term', 10, 2 );
+add_action( 'pmxi_before_xml_import', __NAMESPACE__ . '\delete_posts', 10, 1 );
 // add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_transaction_donor', 10, 1 );
 // add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_transaction_think_tank', 10, 1 );
 
@@ -135,81 +137,48 @@ function set_transaction_data( int $post_id ) : void {
  * @return void This function does not return any value.
  */
 function set_transaction_donor_data( int $post_id ): void {
-	$transaction_post_type = 'transaction';
-	$donor_post_type       = 'donor';
-	$donor_type_taxonomy   = 'donor_type';
-	$donor_taxonomy        = $donor_post_type;
+    $post_type = 'transaction';
 
-	if ( $transaction_post_type !== get_post_type( $post_id ) ) {
-		$message = sprintf( 'post ID %d is not .', $post_id, esc_attr( $transaction_post_type ) );
-		error_log( $message );
-		return;
-	}
+    if ( $post_type !== get_post_type( $post_id ) ) {
+        error_log( sprintf( 'Post ID %d is not of type %s.', $post_id, $post_type ) );
+        return;
+    }
 
-	$donor_name = get_post_meta( $post_id, 'donor_name', true );
-	if ( ! $donor_name ) {
-		$message = sprintf( 'No donor name set for post ID %d.', $post_id );
-		error_log( $message );
-		return;
-	}
+    $taxonomy   = 'donor';
+    $donor_name = get_post_meta( $post_id, 'donor_name', true );
 
-	$args = array(
-		'post_type'      => $donor_post_type,
-		'title'          => $donor_name,
-		'posts_per_page' => 1,
-		'fields'         => 'ids',
-	);
+    if ( empty( $donor_name ) ) {
+        error_log( sprintf( 'No donor name found for post ID %d.', $post_id ) );
+        return;
+    }
 
-	$donor_posts = get_posts( $args );
+    $donor_term = get_term_by( 'name', $donor_name, $taxonomy );
 
-	if ( ! empty( $donor_posts ) ) {
-		$donor_post_id   = $donor_posts[0];
-		$donor_post_name = get_the_title( $donor_post_id );
-		$donor_parent    = get_post_parent( $donor_post_id );
+    if ( empty( $donor_term ) || is_wp_error( $donor_term ) ) {
+        error_log( sprintf( 'Donor term %s does not exist.', $donor_name ) );
+        return;
+    }
 
-		if ( $donor_parent ) {
-			$donor_parent_id   = $donor_parent->ID;
-			$donor_parent_name = $donor_parent->post_title;
-		} else {
-			$donor_parent_id   = $donor_post_id;
-			$donor_parent_name = $donor_post_name;
-		}
+    $terms     = array( $donor_term->term_id );
+    $parent_id = $donor_term->parent;
+    if ( $parent_id ) {
+        array_unshift( $terms, $parent_id );
+    }
 
-		$donor_type_terms = wp_get_post_terms( $donor_parent_id, $donor_type_taxonomy, array( 'fields' => 'ids' ) );
-		$donor_terms      = wp_get_post_terms(
-			$donor_parent_id,
-			$donor_post_type,
-			array(
-				'fields'  => 'ids',
-				'orderby' => 'parent',
-			)
-		);
+    $current_donor_terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids' ) );
 
-		$post_data = array(
-			'ID'         => $post_id,
-			'meta_input' => array(
-				'donor_parent_name' => $donor_parent_name,
-				'donor_parent_id'   => $donor_parent_id,
-				'donor_name'        => $donor_post_name,
-			),
-			'tax_input'  => array(
-				$donor_type_taxonomy => $donor_type_terms,
-				$donor_post_type     => $donor_terms,
-			),
-		);
+    if ( $current_donor_terms === $terms ) {
+        error_log( sprintf( 'Terms are already correctly assigned for post ID %d.', $post_id ) );
+        return;
+    }
 
-		$return = wp_update_post( $post_data );
+    $result = wp_set_post_terms( $post_id, $terms, $taxonomy );
 
-		if ( $return ) {
-			$message = sprintf( '%s set for post ID %d.', json_encode( $post_data ), $post_id );
-		} else {
-			$message = sprintf( 'Error: data not set for post ID %d.', $post_id );
-		}
-		// error_log( $message );
-	} else {
-		$message = sprintf( 'No donor post found for donor name %s.', $donor_name );
-		error_log( $message );
-	}
+    if ( is_wp_error( $result ) ) {
+        error_log( sprintf( 'Failed to assign donor terms to post ID %d: %s', $post_id, $result->get_error_message() ) );
+    } else {
+        error_log( sprintf( 'Donor terms assigned to post ID %d: %s', $post_id, implode( ', ', $terms ) ) );
+    }
 }
 
 /**
@@ -341,6 +310,126 @@ function process_donors() : void {
 	}
 }
 
+/**
+ * Delete posts and associated terms before import.
+ *
+ * @link https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_before_xml_import
+ *
+ * @param int $import_id The ID of the import process.
+ * @return void
+ */
+function delete_posts( int $import_id ): void {
+	$taxonomy_map = array(
+		8 => 'transaction',
+		5 => 'donor',
+		4 => 'donor',
+		3 => 'think_tank',
+	);
+
+	if ( isset( $taxonomy_map[ $import_id ] ) ) {
+		$import = new \PMXI_Import_Record();
+		$import->getById( $import_id );
+		$import->deletePosts( true );
+
+		$taxonomy = $taxonomy_map[ $import_id ];
+		$term_ids = get_terms(
+			array(
+				'taxonomy'   => $taxonomy,
+				'fields'     => 'ids',
+				'hide_empty' => false,
+			)
+		);
+
+		if ( is_wp_error( $term_ids ) ) {
+			error_log( sprintf( 'Error retrieving terms for taxonomy %s: %s', $taxonomy, $term_ids->get_error_message() ) );
+			return;
+		}
+
+		foreach ( $term_ids as $term_id ) {
+			$deleted = wp_delete_term( $term_id, $taxonomy );
+			$message = $deleted
+				? sprintf( 'Term %d deleted from taxonomy %s.', $term_id, $taxonomy )
+				: sprintf( 'Failed to delete term %d from taxonomy %s.', $term_id, $taxonomy );
+			error_log( $message );
+		}
+	}
+}
+
+/**
+ * Delete post term
+ *
+ * @uses get_term_id_from_post_id()
+ *
+ * @param  integer $post_id
+ * @param  array   $import
+ * @return void
+ */
+function delete_post_term( $post_id, $import ): void {
+	$post_type = get_post_type( $post_id );
+
+	if ( 'donor' === $post_type || 'think_tank' === $post_type ) {
+		$taxonomy = $post_type;
+		$term_id  = get_term_id_from_post_id( $post_id, $taxonomy );
+		if ( $term_id ) {
+			$deleted = wp_delete_term( $term_id, $taxonomy );
+			if ( $deleted ) {
+				$message = sprintf( 'Term %d deleted for post ID %d.', $term_id, $post_id );
+				error_log( $message );
+			}
+		}
+	}
+}
+
+/**
+ * Get term ID from post ID
+ *
+ * @param  integer $post_id
+ * @param  string  $taxonomy
+ * @return integer|null
+ */
+function get_term_id_from_post_id( int $post_id, string $taxonomy ): ?int {
+	$terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids', 'hide_empty' => false ) );
+	return ( ! empty( $terms ) && ! is_wp_error( $terms ) ) ? $terms[0] : null;
+}
+
+/**
+ * Get the parent ID of a donor term from its name.
+ *
+ * @param string $donor_name The name of the donor term.
+ * @return int|null The parent term ID, or null if the term does not exist.
+ */
+function get_donor_parent_id_from_name( string $donor_name ): ?int {
+	$taxonomy = 'donor';
+	$term = get_term_by( 'name', $donor_name, $taxonomy );
+
+	return ( ! empty( $term ) ) ? $term[0]->term_id : null;
+}
+
+/**
+ * Get the hierarchy of a taxonomy term as a string.
+ *
+ * @param string $term_name The name of the term.
+ * @param string $taxonomy  The taxonomy name. Default is 'donor'.
+ * @return string The term hierarchy as a formatted string, or an empty string if the term does not exist.
+ */
+function get_term_hierarchy( string $term_name, string $taxonomy = 'donor' ): string {
+	$term = get_term_by( 'name', $term_name, $taxonomy );
+
+	if ( ! $term || is_wp_error( $term ) ) {
+		return '';
+	}
+
+	$hierarchy = array();
+
+	while ( $term ) {
+		$hierarchy[] = $term->name;
+		$term        = ( $term->parent ) ? get_term( $term->parent, $taxonomy ) : null;
+	}
+
+	$hierarchy = array_reverse( $hierarchy );
+
+	return implode( '|', $hierarchy );
+}
 
 /**
  * Registers custom WP-CLI commands for transaction data operations.
