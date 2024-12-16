@@ -234,49 +234,57 @@ function set_cumulative_values( int $import_id, $import ) : void {
 }
 
 /**
- * Update all think tank posts meta values
+ * Process think tank data after transactions are imported.
  *
  * @return void
  */
-function process_think_tanks() : void {
-	$post_type = 'think_tank';
-	$args      = array(
-		'post_type'      => $post_type,
-		'posts_per_page' => -1,
-		// 'fields'         => 'ids',
-	);
+function process_think_tanks(): void {
+    $post_type = 'think_tank';
 
-	$posts = get_posts( $args );
+    $args = array(
+        'post_type'      => $post_type,
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    );
 
-	if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
-		$count = 0;
-		if ( ! method_exists( '\Ttft\Data_Tables\Data', 'get_single_think_tank_total' ) ) {
-			error_log( sprintf( 'Method %s does not exist.', 'Ttft\Data_Tables\Data::get_single_think_tank_total' ) );
-			return;
-		}
+    $think_tanks = get_posts( $args );
 
-		$args = array(
-			'taxonomy' => 'donor_type',
-			'fields'   => 'slugs',
-		);
+    if ( empty( $think_tanks ) || is_wp_error( $think_tanks ) ) {
+        return;
+    }
 
-		$donor_types = get_terms( $args );
+    $donor_types = get_terms(
+        array(
+            'taxonomy' => 'donor_type',
+            'fields'   => 'slugs',
+        )
+    );
 
-		foreach ( $posts as $post ) {
-			$post_id = $post->ID;
+    $processed_count = 0;
 
-			$amount_calc = \Ttft\Data_Tables\Data::get_single_think_tank_total( $post->post_name );
+    foreach ( $think_tanks as $post_id ) {
+        $think_tank = get_post_field( 'post_name', $post_id );
 
-			add_post_meta( $post_id, 'amount_calc', $amount_calc, true );
+        $sums = get_transaction_sums( $think_tank );
 
-			foreach ( $donor_types as $donor_type ) {
-				$total = \Ttft\Data_Tables\Data::get_single_think_tank_total( $post->post_name, '', $donor_type );
+        update_post_meta( $post_id, 'amount_calc', $sums['amount_calc'] );
+        update_post_meta( $post_id, 'undisclosed', $sums['undisclosed'] );
 
-				add_post_meta( $post_id, 'amount_' . $donor_type, $total, true );
-			}
-		}
-	}
+        if ( ! empty( $donor_types ) ) {
+            foreach ( $donor_types as $donor_type ) {
+                $donor_type_sums = get_transaction_sums( $think_tank, $donor_type );
+
+                update_post_meta( $post_id, 'amount_' . $donor_type, $donor_type_sums['amount_calc'] );
+                update_post_meta( $post_id, 'undisclosed_' . $donor_type, $donor_type_sums['undisclosed'] );
+            }
+        }
+
+        $processed_count++;
+    }
+
+    error_log( "Processed $processed_count think tank posts." );
 }
+
 
 /**
  * Update all donor posts meta values
@@ -288,24 +296,18 @@ function process_donors() : void {
 	$args      = array(
 		'post_type'      => $post_type,
 		'posts_per_page' => -1,
-		// 'fields'         => 'ids',
+		'fields'         => 'ids',
 	);
 
 	$posts = get_posts( $args );
 
 	if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
-		if ( ! method_exists( '\Ttft\Data_Tables\Data', 'get_single_donor_total' ) ) {
-			error_log( sprintf( 'Method %s does not exist.', 'Ttft\Data_Tables\Data::get_single_donor_total' ) );
-			return;
-		}
+		foreach ( $posts as $post_id ) {
+			$donor = get_post_field( 'post_name', $post_id );
 
-		foreach ( $posts as $post ) {
-			$post_id = $post->ID;
+			$sum = get_donor_sums( $donor );
 
-			$total = \Ttft\Data_Tables\Data::get_single_donor_total( $post->post_name );
-
-			add_post_meta( $post_id, 'amount_calc', $total, true );
-
+			add_post_meta( $post_id, 'amount_calc', $sum, true );
 		}
 	}
 }
@@ -458,6 +460,148 @@ function get_term_hierarchy( string $term_name, string $taxonomy = 'donor' ): st
 	$hierarchy = array_reverse( $hierarchy );
 
 	return implode( '|', $hierarchy );
+}
+
+/**
+ * Get the sum of `amount_calc` for a given array of post IDs.
+ *
+ * @param array $post_ids Array of post IDs.
+ * @return int The summed value of `amount_calc`.
+ */
+function get_total( array $post_ids ): int {
+    if ( empty( $post_ids ) ) {
+        return 0;
+    }
+
+    $total_amount = 0;
+
+    foreach ( $post_ids as $post_id ) {
+        $amount_calc   = (int) get_post_meta( $post_id, 'amount_calc', true );
+        $total_amount += $amount_calc;
+    }
+
+    return $total_amount;
+}
+
+/**
+ * Check if all posts in a given array of post IDs have `disclosed` set to 'no'.
+ *
+ * @param array $post_ids Array of post IDs.
+ * @return bool True if all posts have `disclosed` set to 'no', false otherwise.
+ */
+function is_undisclosed( array $post_ids ): bool {
+    if ( empty( $post_ids ) ) {
+        return false;
+    }
+
+    foreach ( $post_ids as $post_id ) {
+        $disclosed = get_post_meta( $post_id, 'disclosed', true );
+        if ( strtolower( $disclosed ) !== 'no' ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Get the total `amount_calc` and check if all transactions are undisclosed by terms.
+ *
+ * @param string $think_tank The slug of the think_tank taxonomy term.
+ * @param string $donor_type The slug of the donor_type taxonomy term.
+ * @return array {
+ *     @type int  $amount_calc The summed value of `amount_calc`.
+ *     @type bool $undisclosed True if all transactions are undisclosed, false otherwise.
+ * }
+ */
+function get_think_tank_sums( string $think_tank = '', string $donor_type = '' ): array {
+    $post_ids = get_think_tank_post_ids( $think_tank, $donor_type );
+
+    return array(
+        'amount_calc' => get_total( $post_ids ),
+        'undisclosed' => is_undisclosed( $post_ids ),
+    );
+}
+
+/**
+ * Fetch transactions by taxonomy terms and return post IDs.
+ *
+ * @param string $think_tank The slug of the think_tank taxonomy term.
+ * @param string $donor_type The slug of the donor_type taxonomy term.
+ * @return array Array of post IDs.
+ */
+function get_think_tank_post_ids( string $think_tank = '', string $donor_type = '' ): array {
+	$args = array(
+		'post_type'      => 'transaction',
+		'posts_per_page' => -1,
+		'tax_query'      => array(),
+		'fields'         => 'ids',
+	);
+
+	if( ! empty( $think_tank ) ) {
+		$args['tax_query'][] = array(
+			'taxonomy' => 'think_tank',
+			'field'    => 'slug',
+			'terms'    => $think_tank,
+		);
+	}
+
+	if( ! empty( $donor_type ) ) {
+		$args['tax_query'][] = array(
+			'taxonomy' => 'donor_type',
+			'field'    => 'slug',
+			'terms'    => $donor_type,
+		);
+	}
+
+	$query = new \WP_Query( $args );
+
+	return $query->have_posts() ? $query->posts : array();
+}
+
+/**
+ * Get the total `amount_calc` and check if all transactions are undisclosed by terms.
+ *
+ * @param string $donor The slug of the donor taxonomy term.
+ * @return array {
+ *     @type int  $amount_calc The summed value of `amount_calc`.
+ *     @type bool $undisclosed True if all transactions are undisclosed, false otherwise.
+ * }
+ */
+function get_donor_sums( string $donor = '' ): array {
+    $post_ids = get_donor_post_ids( $donor );
+
+    return array(
+        'amount_calc' => get_total( $post_ids ),
+        'undisclosed' => is_undisclosed( $post_ids ),
+    );
+}
+
+/**
+ * Fetch transactions by taxonomy terms and return post IDs.
+ *
+ * @param string $donor The slug of the donor taxonomy term.
+ * @return array Array of post IDs.
+ */
+function get_donor_post_ids( string $donor = '' ): array {
+	$args = array(
+		'post_type'      => 'transaction',
+		'posts_per_page' => -1,
+		'tax_query'      => array(),
+		'fields'         => 'ids',
+	);
+
+	if( ! empty( $donor ) ) {
+		$args['tax_query'][] = array(
+			'taxonomy' => 'donor',
+			'field'    => 'slug',
+			'terms'    => $donor,
+		);
+	}
+
+	$query = new \WP_Query( $args );
+
+	return $query->have_posts() ? $query->posts : array();
 }
 
 /**
