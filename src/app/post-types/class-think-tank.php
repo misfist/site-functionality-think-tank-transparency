@@ -319,14 +319,19 @@ class Think_Tank extends Post_Type {
 	public function render_meta_box( $post ): void {
 		$post_id              = $post->ID;
 		$amount               = get_post_meta( $post_id, 'amount_calc', true );
-		$amount_domestic      = get_post_meta( $post_id, 'amount_domestic', true );
-		$amount_foreign       = get_post_meta( $post_id, 'amount_foreign', true );
-		$amount_defense       = get_post_meta( $post_id, 'amount_defense', true );
+		$amount_domestic      = get_post_meta( $post_id, 'amount_u-s-government', true );
+		$amount_foreign       = get_post_meta( $post_id, 'amount_foreign-government', true );
+		$amount_defense       = get_post_meta( $post_id, 'amount_pentagon-contractor', true );
+		$undisclosed_domestic = get_post_meta( $post_id, 'undisclosed_u-s-government', true );
+		$undisclosed_foreign  = get_post_meta( $post_id, 'undisclosed_foreign-government', true );
+		$undisclosed_defense  = get_post_meta( $post_id, 'undisclosed_pentagon-contractor', true );
+
 		$no_defense_accepted  = get_post_meta( $post_id, 'no_defense_accepted', true );
 		$no_domestic_accepted = get_post_meta( $post_id, 'no_domestic_accepted', true );
 		$no_foreign_accepted  = get_post_meta( $post_id, 'no_foreign_accepted', true );
-		$limited_info         = get_post_meta( $post_id, 'limited_info', true );
-		$transparency_score   = get_post_meta( $post_id, 'transparency_score', true );
+
+		$limited_info       = get_post_meta( $post_id, 'limited_info', true );
+		$transparency_score = get_post_meta( $post_id, 'transparency_score', true );
 
 		?>
 		<table class="wp-block-table">
@@ -345,15 +350,15 @@ class Think_Tank extends Post_Type {
 			</thead>
 			<tbody>
 				<tr>
-					<td><?php esc_html_e( $amount, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $amount_domestic, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $amount_foreign, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $amount_defense, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $no_defense_accepted, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $no_domestic_accepted, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $no_foreign_accepted, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $limited_info, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $transparency_score, 'site-functionality' ); ?></td>
+					<td><?php printf( '$%s', number_format( $amount ) ); ?></td>
+					<td><?php echo ( $undisclosed_domestic ) ? sprintf( '<span class="not-disclosed">%s</span>', $undisclosed_domestic ) : '$' . number_format( $amount_domestic ); ?></td>
+					<td><?php echo ( $undisclosed_foreign ) ? sprintf( '<span class="not-disclosed">%s</span>', $undisclosed_foreign ) : '$' . number_format( $amount_foreign ); ?></td>
+					<td><?php echo ( $undisclosed_defense ) ? sprintf( '<span class="not-disclosed">%s</span>', $undisclosed_defense ) : '$' . number_format( $amount_defense ); ?></td>
+					<td><?php echo $no_defense_accepted; ?></td>
+					<td><?php echo $no_domestic_accepted; ?></td>
+					<td><?php echo $no_foreign_accepted; ?></td>
+					<td><?php echo $limited_info; ?></td>
+					<td><?php echo (int) $transparency_score; ?></td>
 				</tr>
 			</tbody>
 		</table>
