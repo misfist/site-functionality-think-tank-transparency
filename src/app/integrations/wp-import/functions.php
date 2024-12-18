@@ -15,8 +15,11 @@ use  Site_Functionality\App\Taxonomies\Taxonomies;
 add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_donor_parent', 10, 1 );
 add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_transaction_donor_data', 10, 1 );
 add_action( 'pmxi_after_xml_import', __NAMESPACE__ . '\set_cumulative_values', 10, 2 );
-add_action( 'pmxi_before_delete_post', __NAMESPACE__ . '\delete_post_term', 10, 2 );
-add_action( 'pmxi_before_xml_import', __NAMESPACE__ . '\delete_posts', 10, 1 );
+add_action( 'pmxi_before_xml_import', __NAMESPACE__ . '\before_import', 10, 1 );
+
+// add_action( 'pmxi_before_delete_post', __NAMESPACE__ . '\delete_post_term', 10, 1 );
+
+// add_action( 'pmxi_before_xml_import', __NAMESPACE__ . '\delete_posts', 10, 1 );
 // add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_transaction_donor', 10, 1 );
 // add_action( 'pmxi_saved_post', __NAMESPACE__ . '\set_transaction_think_tank', 10, 1 );
 
@@ -134,6 +137,38 @@ function set_transaction_donor_data( int $post_id ): void {
 		error_log( sprintf( 'Donor terms assigned to post ID %d: %s', $post_id, implode( ', ', $terms ) ) );
 	}
 }
+
+/**
+ * Update all think tank and donor posts meta values
+ * This function is hooked to the 'pmxi_after_xml_import' action and processes
+ * each meta key defined in the array to update cumulative values for both donor
+ * and think tank post types.
+ *
+ * @see https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_after_xml_import
+ *
+ * @return void
+ */
+function set_cumulative_values( int $import_id, $import ) : void {
+	if ( 8 !== $import_id ) {
+		return;
+	}
+	process_think_tanks();
+	process_donors();
+}
+
+/**
+ * Run before import
+ * 
+ * @link https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_before_xml_import
+ *
+ * @param  integer $import_id
+ * @return void
+ */
+function before_import( int $import_id ): void {
+	$batch_size = 100;
+	delete_posts( $import_id, $batch_size );
+}
+
 /**
  * Set transaction data for all transactions.
  *
@@ -214,75 +249,56 @@ function set_transaction_year_data( int $post_id ) : void {
 }
 
 /**
- * Update all think tank and donor posts meta values
- * This function is hooked to the 'pmxi_after_xml_import' action and processes
- * each meta key defined in the array to update cumulative values for both donor
- * and think tank post types.
- *
- * @see https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_after_xml_import
- *
- * @return void
- */
-function set_cumulative_values( int $import_id, $import ) : void {
-	if ( 8 !== $import_id ) {
-		return;
-	}
-	process_think_tanks();
-	process_donors();
-}
-
-/**
  * Process think tank data after transactions are imported.
  *
  * @return void
  */
 function process_think_tanks(): void {
-    $post_type = 'think_tank';
+	$post_type = 'think_tank';
 
-    $args = array(
-        'post_type'      => $post_type,
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-    );
+	$args = array(
+		'post_type'      => $post_type,
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	);
 
-    $think_tanks = get_posts( $args );
+	$think_tanks = get_posts( $args );
 
-    if ( empty( $think_tanks ) || is_wp_error( $think_tanks ) ) {
-        return;
-    }
+	if ( empty( $think_tanks ) || is_wp_error( $think_tanks ) ) {
+		return;
+	}
 
-    $donor_types = get_terms(
-        array(
-            'taxonomy' => 'donor_type',
-            'fields'   => 'slugs',
-        )
-    );
+	$donor_types = get_terms(
+		array(
+			'taxonomy' => 'donor_type',
+			'fields'   => 'slugs',
+		)
+	);
 
-    $processed_count = 0;
+	$processed_count = 0;
 
-    foreach ( $think_tanks as $post_id ) {
-        $think_tank = get_post_field( 'post_name', $post_id );
+	foreach ( $think_tanks as $post_id ) {
+		$think_tank = get_post_field( 'post_name', $post_id );
 
-        $sums = get_transaction_sums( $think_tank );
+		$sums = get_think_tank_sums( $think_tank );
 
-        update_post_meta( $post_id, 'amount_calc', $sums['amount_calc'] );
-        update_post_meta( $post_id, 'undisclosed', $sums['undisclosed'] );
+		update_post_meta( $post_id, 'amount_calc', $sums['amount_calc'] );
+		update_post_meta( $post_id, 'undisclosed', $sums['undisclosed'] );
 
-        if ( ! empty( $donor_types ) ) {
-            foreach ( $donor_types as $donor_type ) {
-                $donor_type_sums = get_transaction_sums( $think_tank, $donor_type );
+		if ( ! empty( $donor_types ) ) {
+			foreach ( $donor_types as $donor_type ) {
+				$donor_type_sums = get_think_tank_sums( $think_tank, $donor_type );
 
-                update_post_meta( $post_id, 'amount_' . $donor_type, $donor_type_sums['amount_calc'] );
-                update_post_meta( $post_id, 'undisclosed_' . $donor_type, $donor_type_sums['undisclosed'] );
-            }
-        }
+				update_post_meta( $post_id, 'amount_' . $donor_type, $donor_type_sums['amount_calc'] );
+				update_post_meta( $post_id, 'undisclosed_' . $donor_type, $donor_type_sums['undisclosed'] );
+			}
+		}
 
-        $processed_count++;
-    }
+		$processed_count++;
+	}
 
-    error_log( "Processed $processed_count think tank posts." );
+	error_log( "Processed $processed_count think tank posts." );
 }
-
 
 /**
  * Update all donor posts meta values
@@ -303,9 +319,10 @@ function process_donors() : void {
 		foreach ( $posts as $post_id ) {
 			$donor = get_post_field( 'post_name', $post_id );
 
-			$sum = get_donor_sums( $donor );
+			$sums = get_donor_sums( $donor );
 
-			add_post_meta( $post_id, 'amount_calc', $sum, true );
+			add_post_meta( $post_id, 'amount_calc', $sums['amount_calc'], true );
+			add_post_meta( $post_id, 'undisclosed', $sums['undisclosed'], true );
 		}
 	}
 }
@@ -367,18 +384,18 @@ function delete_posts( int $import_id, int $batch_size = 100 ): void {
  * @param  array   $import
  * @return void
  */
-function delete_post_term( $post_id, $import ): void {
+function delete_post_term( int $post_id ): void {
 	$post_type = get_post_type( $post_id );
-
-	if ( 'donor' === $post_type || 'think_tank' === $post_type ) {
-		$taxonomy = $post_type;
-		$term_id  = get_term_id_from_post_id( $post_id, $taxonomy );
-		if ( $term_id ) {
-			$deleted = wp_delete_term( $term_id, $taxonomy );
-			if ( $deleted ) {
-				$message = sprintf( 'Term %d deleted for post ID %d.', $term_id, $post_id );
-				error_log( $message );
-			}
+	$taxonomy  = $post_type;
+	$term_id   = get_term_id_from_post_id( $post_id, $taxonomy );
+	if ( false !== $term_id ) {
+		$deleted = wp_delete_term( $term_id, $taxonomy );
+		if ( $deleted ) {
+			$message = sprintf( 'Term %d deleted for post ID %d.', $term_id, $post_id );
+			log_progress_message( $message );
+            error_log( $message );
+		} else {
+			error_log( sprintf( 'Failed to delete term %d for post ID %d.', $term_id, $post_id ) );
 		}
 	}
 }
@@ -391,7 +408,14 @@ function delete_post_term( $post_id, $import ): void {
  * @return integer|null
  */
 function get_term_id_from_post_id( int $post_id, string $taxonomy ): ?int {
-	$terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids', 'hide_empty' => false ) );
+	$terms = wp_get_post_terms(
+		$post_id,
+		$taxonomy,
+		array(
+			'fields'     => 'ids',
+			'hide_empty' => false,
+		)
+	);
 	return ( ! empty( $terms ) && ! is_wp_error( $terms ) ) ? $terms[0] : null;
 }
 
@@ -403,7 +427,7 @@ function get_term_id_from_post_id( int $post_id, string $taxonomy ): ?int {
  */
 function get_donor_parent_id_from_name( string $donor_name ): ?int {
 	$taxonomy = 'donor';
-	$term = get_term_by( 'name', $donor_name, $taxonomy );
+	$term     = get_term_by( 'name', $donor_name, $taxonomy );
 
 	return ( ! empty( $term ) ) ? $term[0]->term_id : null;
 }
@@ -441,18 +465,18 @@ function get_term_hierarchy( string $term_name, string $taxonomy = 'donor' ): st
  * @return int The summed value of `amount_calc`.
  */
 function get_total( array $post_ids ): int {
-    if ( empty( $post_ids ) ) {
-        return 0;
-    }
+	if ( empty( $post_ids ) ) {
+		return 0;
+	}
 
-    $total_amount = 0;
+	$total_amount = 0;
 
-    foreach ( $post_ids as $post_id ) {
-        $amount_calc   = (int) get_post_meta( $post_id, 'amount_calc', true );
-        $total_amount += $amount_calc;
-    }
+	foreach ( $post_ids as $post_id ) {
+		$amount_calc   = (int) get_post_meta( $post_id, 'amount_calc', true );
+		$total_amount += $amount_calc;
+	}
 
-    return $total_amount;
+	return $total_amount;
 }
 
 /**
@@ -462,18 +486,18 @@ function get_total( array $post_ids ): int {
  * @return bool True if all posts have `disclosed` set to 'no', false otherwise.
  */
 function is_undisclosed( array $post_ids ): bool {
-    if ( empty( $post_ids ) ) {
-        return false;
-    }
+	if ( empty( $post_ids ) ) {
+		return false;
+	}
 
-    foreach ( $post_ids as $post_id ) {
-        $disclosed = get_post_meta( $post_id, 'disclosed', true );
-        if ( strtolower( $disclosed ) !== 'no' ) {
-            return false;
-        }
-    }
+	foreach ( $post_ids as $post_id ) {
+		$disclosed = get_post_meta( $post_id, 'disclosed', true );
+		if ( strtolower( $disclosed ) !== 'no' ) {
+			return false;
+		}
+	}
 
-    return true;
+	return true;
 }
 
 /**
@@ -487,12 +511,12 @@ function is_undisclosed( array $post_ids ): bool {
  * }
  */
 function get_think_tank_sums( string $think_tank = '', string $donor_type = '' ): array {
-    $post_ids = get_think_tank_post_ids( $think_tank, $donor_type );
+	$post_ids = get_think_tank_post_ids( $think_tank, $donor_type );
 
-    return array(
-        'amount_calc' => get_total( $post_ids ),
-        'undisclosed' => is_undisclosed( $post_ids ),
-    );
+	return array(
+		'amount_calc' => get_total( $post_ids ),
+		'undisclosed' => is_undisclosed( $post_ids ),
+	);
 }
 
 /**
@@ -510,7 +534,7 @@ function get_think_tank_post_ids( string $think_tank = '', string $donor_type = 
 		'fields'         => 'ids',
 	);
 
-	if( ! empty( $think_tank ) ) {
+	if ( ! empty( $think_tank ) ) {
 		$args['tax_query'][] = array(
 			'taxonomy' => 'think_tank',
 			'field'    => 'slug',
@@ -518,7 +542,7 @@ function get_think_tank_post_ids( string $think_tank = '', string $donor_type = 
 		);
 	}
 
-	if( ! empty( $donor_type ) ) {
+	if ( ! empty( $donor_type ) ) {
 		$args['tax_query'][] = array(
 			'taxonomy' => 'donor_type',
 			'field'    => 'slug',
@@ -541,12 +565,12 @@ function get_think_tank_post_ids( string $think_tank = '', string $donor_type = 
  * }
  */
 function get_donor_sums( string $donor = '' ): array {
-    $post_ids = get_donor_post_ids( $donor );
+	$post_ids = get_donor_post_ids( $donor );
 
-    return array(
-        'amount_calc' => get_total( $post_ids ),
-        'undisclosed' => is_undisclosed( $post_ids ),
-    );
+	return array(
+		'amount_calc' => get_total( $post_ids ),
+		'undisclosed' => is_undisclosed( $post_ids ),
+	);
 }
 
 /**
@@ -563,7 +587,7 @@ function get_donor_post_ids( string $donor = '' ): array {
 		'fields'         => 'ids',
 	);
 
-	if( ! empty( $donor ) ) {
+	if ( ! empty( $donor ) ) {
 		$args['tax_query'][] = array(
 			'taxonomy' => 'donor',
 			'field'    => 'slug',
