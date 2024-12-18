@@ -330,8 +330,11 @@ class Think_Tank extends Post_Type {
 		$no_domestic_accepted = get_post_meta( $post_id, 'no_domestic_accepted', true );
 		$no_foreign_accepted  = get_post_meta( $post_id, 'no_foreign_accepted', true );
 
+		$undisclosed        = get_post_meta( $post_id, 'undisclosed', true );
 		$limited_info       = get_post_meta( $post_id, 'limited_info', true );
 		$transparency_score = get_post_meta( $post_id, 'transparency_score', true );
+		$settings           = get_option( 'site_settings' );
+		$unknown_text	   = ( isset( $settings['unknown_amount'] ) ) ? $settings['unknown_amount'] : esc_attr__( 'Unknown Amount', 'site-functionality' );
 
 		?>
 		<table class="wp-block-table">
@@ -350,10 +353,10 @@ class Think_Tank extends Post_Type {
 			</thead>
 			<tbody>
 				<tr>
-					<td><?php printf( '$%s', number_format( $amount ) ); ?></td>
-					<td><?php echo ( $undisclosed_domestic ) ? sprintf( '<span class="not-disclosed">%s</span>', $undisclosed_domestic ) : '$' . number_format( $amount_domestic ); ?></td>
-					<td><?php echo ( $undisclosed_foreign ) ? sprintf( '<span class="not-disclosed">%s</span>', $undisclosed_foreign ) : '$' . number_format( $amount_foreign ); ?></td>
-					<td><?php echo ( $undisclosed_defense ) ? sprintf( '<span class="not-disclosed">%s</span>', $undisclosed_defense ) : '$' . number_format( $amount_defense ); ?></td>
+					<td><?php echo ( $undisclosed ) ? sprintf( '<span class="not-disclosed">%s</span>', esc_attr__( 'Unknown Amts', 'site-functionality' ) ) : sprintf( '$%s', number_format( $amount ) ); ?></td>
+					<td><?php echo ( $undisclosed_domestic ) ? sprintf( '<span class="not-disclosed">%s</span>', $unknown_text ) : sprintf( '$%s', number_format( $amount_domestic ) ); ?></td>
+					<td><?php echo ( $undisclosed_foreign ) ? sprintf( '<span class="not-disclosed">%s</span>', $unknown_text ) : sprintf( '$%s', number_format( $amount_foreign ) ); ?></td>
+					<td><?php echo ( $undisclosed_defense ) ? sprintf( '<span class="not-disclosed">%s</span>', $unknown_text ) : sprintf( '$%s', number_format( $amount_defense ) ); ?></td>
 					<td><?php echo $no_defense_accepted; ?></td>
 					<td><?php echo $no_domestic_accepted; ?></td>
 					<td><?php echo $no_foreign_accepted; ?></td>
