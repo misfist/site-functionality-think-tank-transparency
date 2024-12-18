@@ -111,7 +111,7 @@ class Site_Functionality {
 		$taxonomies     = new Taxonomies();
 		$custom_fields  = new Custom_Fields();
 		$admin_settings = new Admin_Settings();
-		// $integrations   = new Integrations();
+		$integrations   = new Integrations();
 	}
 
 }

@@ -9,7 +9,8 @@ namespace Site_Functionality\Integrations;
 
 use Site_Functionality\Common\Abstracts\Base;
 use Site_Functionality\Integrations\CLI\Commands;
-use Site_Functionality\Integrations\WP_Import\Actions;
+use Site_Functionality\Integrations\WP_Import\Import;
+// use Site_Functionality\Integrations\WP_Import\Actions;
 // use Site_Functionality\Integrations\API\API;
 // use Site_Functionality\Integrations\Data_Tables\Data_Tables;
 
@@ -36,10 +37,9 @@ class Integrations extends Base {
 	 * @return void
 	 */
 	public function init(): void {
-		new Commands();
-		new Actions();
-		// new Data_Tables();
-		// new API();
+		// new Commands();
+		Import::get_instance();
+		// new Import();
 	}
 
 }

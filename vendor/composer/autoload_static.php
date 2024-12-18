@@ -60,16 +60,12 @@ class ComposerStaticInitf147f25c507539ec9846c5fde74dd04a
         'Site_Functionality\\Common\\WP_Includes\\I18n' => __DIR__ . '/../..' . '/src/common/wp-includes/class-i18n.php',
         'Site_Functionality\\Integrations\\API\\API' => __DIR__ . '/../..' . '/src/app/integrations/api/class-api.php',
         'Site_Functionality\\Integrations\\CLI\\Commands' => __DIR__ . '/../..' . '/src/app/integrations/cli/class-commands.php',
-        'Site_Functionality\\Integrations\\Data_Tables\\Data' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data.php',
-        'Site_Functionality\\Integrations\\Data_Tables\\Data_Filters' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data-filters.php',
-        'Site_Functionality\\Integrations\\Data_Tables\\Data_Tables' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-data-tables.php',
-        'Site_Functionality\\Integrations\\Data_Tables\\Donor' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-donor.php',
-        'Site_Functionality\\Integrations\\Data_Tables\\Think_Tank' => __DIR__ . '/../..' . '/src/app/integrations/data-tables/class-think-tank.php',
         'Site_Functionality\\Integrations\\Integrations' => __DIR__ . '/../..' . '/src/app/integrations/class-integrations.php',
+        'Site_Functionality\\Integrations\\Transaction_Data_CLI' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/functions.php',
         'Site_Functionality\\Integrations\\WP_Import\\Actions' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/class-actions.php',
+        'Site_Functionality\\Integrations\\WP_Import\\Import' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/class-import.php',
         'Site_Functionality\\Settings' => __DIR__ . '/../..' . '/src/class-settings.php',
         'Site_Functionality\\Site_Functionality' => __DIR__ . '/../..' . '/src/class-site-functionality.php',
-        'Site_Functionality\\Transaction_Data_CLI' => __DIR__ . '/../..' . '/src/app/integrations/wp-import/functions.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
