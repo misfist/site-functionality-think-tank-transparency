@@ -47,14 +47,14 @@ class Think_Tank extends Post_Type {
 	public function init(): void {
 		parent::init();
 
-		$args        = array(
+		$args                      = array(
 			'taxonomy'   => 'donor_type',
 			'fields'     => 'slugs',
 			'hide_empty' => false,
 		);
-		$donor_types = get_terms( $args );
+		$donor_types               = get_terms( $args );
 		$this->data['donor_types'] = ( ! is_wp_error( $donor_types ) && ! empty( $donor_types ) ) ? $donor_types : array();
-		$donor_array = array_fill_keys( $this->data['donor_types'], 'string' );
+		$donor_array               = array_fill_keys( $this->data['donor_types'], 'string' );
 
 		$this->data['fields'] = array(
 			array(
@@ -74,6 +74,13 @@ class Think_Tank extends Post_Type {
 			array(
 				'label'        => __( 'Limit Information', 'site-functionality' ),
 				'key'          => 'limited_info',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
@@ -151,6 +158,27 @@ class Think_Tank extends Post_Type {
 			array(
 				'label'        => __( 'Pentagon Contractor Funding', 'site-functionality' ),
 				'key'          => 'amount_pentagon-contractor',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Domestic Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed_u-s-government',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Foreign Interest Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed_foreign-government',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Pentagon Contractor Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed_pentagon-contractor',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
