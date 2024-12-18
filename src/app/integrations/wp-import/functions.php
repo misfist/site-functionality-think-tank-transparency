@@ -81,6 +81,60 @@ function set_donor_parent( int $post_id ): void {
 }
 
 /**
+ * Updates the transaction donor post meta, sets the post parent, and copies parent post's taxonomy terms after a transaction post is imported.
+ *
+ * This function is hooked to the `pmxi_saved_post` action, which is triggered
+ * after a post is saved by WP All Import.
+ *
+ * @link https://www.wpallimport.com/documentation/developers/action-hooks/pmxi_saved_post/ Documentation for `pmxi_saved_post` action hook.
+ * @param int $post_id The ID of the imported post.
+ * @return void This function does not return any value.
+ */
+function set_transaction_donor_data( int $post_id ): void {
+	$post_type = 'transaction';
+
+	if ( $post_type !== get_post_type( $post_id ) ) {
+		error_log( sprintf( 'Post ID %d is not of type %s.', $post_id, $post_type ) );
+		return;
+	}
+
+	$taxonomy   = 'donor';
+	$donor_name = get_post_meta( $post_id, 'donor_name', true );
+
+	if ( empty( $donor_name ) ) {
+		error_log( sprintf( 'No donor name found for post ID %d.', $post_id ) );
+		return;
+	}
+
+	$donor_term = get_term_by( 'name', $donor_name, $taxonomy );
+
+	if ( empty( $donor_term ) || is_wp_error( $donor_term ) ) {
+		error_log( sprintf( 'Donor term %s does not exist.', $donor_name ) );
+		return;
+	}
+
+	$terms     = array( $donor_term->term_id );
+	$parent_id = $donor_term->parent;
+	if ( $parent_id ) {
+		array_unshift( $terms, $parent_id );
+	}
+
+	$current_donor_terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids' ) );
+
+	if ( $current_donor_terms === $terms ) {
+		error_log( sprintf( 'Terms are already correctly assigned for post ID %d.', $post_id ) );
+		return;
+	}
+
+	$result = wp_set_post_terms( $post_id, $terms, $taxonomy );
+
+	if ( is_wp_error( $result ) ) {
+		error_log( sprintf( 'Failed to assign donor terms to post ID %d: %s', $post_id, $result->get_error_message() ) );
+	} else {
+		error_log( sprintf( 'Donor terms assigned to post ID %d: %s', $post_id, implode( ', ', $terms ) ) );
+	}
+}
+/**
  * Set transaction data for all transactions.
  *
  * @return void
@@ -125,62 +179,6 @@ function set_transaction_data( int $post_id ) : void {
 	// set_transaction_think_tank_data( $post_id );
 	// set_transaction_year_data( $post_id );
 }
-
-/**
- * Updates the transaction donor post meta, sets the post parent, and copies parent post's taxonomy terms after a transaction post is imported.
- *
- * This function is hooked to the `pmxi_saved_post` action, which is triggered
- * after a post is saved by WP All Import.
- *
- * @link https://www.wpallimport.com/documentation/developers/action-hooks/pmxi_saved_post/ Documentation for `pmxi_saved_post` action hook.
- * @param int $post_id The ID of the imported post.
- * @return void This function does not return any value.
- */
-function set_transaction_donor_data( int $post_id ): void {
-    $post_type = 'transaction';
-
-    if ( $post_type !== get_post_type( $post_id ) ) {
-        error_log( sprintf( 'Post ID %d is not of type %s.', $post_id, $post_type ) );
-        return;
-    }
-
-    $taxonomy   = 'donor';
-    $donor_name = get_post_meta( $post_id, 'donor_name', true );
-
-    if ( empty( $donor_name ) ) {
-        error_log( sprintf( 'No donor name found for post ID %d.', $post_id ) );
-        return;
-    }
-
-    $donor_term = get_term_by( 'name', $donor_name, $taxonomy );
-
-    if ( empty( $donor_term ) || is_wp_error( $donor_term ) ) {
-        error_log( sprintf( 'Donor term %s does not exist.', $donor_name ) );
-        return;
-    }
-
-    $terms     = array( $donor_term->term_id );
-    $parent_id = $donor_term->parent;
-    if ( $parent_id ) {
-        array_unshift( $terms, $parent_id );
-    }
-
-    $current_donor_terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids' ) );
-
-    if ( $current_donor_terms === $terms ) {
-        error_log( sprintf( 'Terms are already correctly assigned for post ID %d.', $post_id ) );
-        return;
-    }
-
-    $result = wp_set_post_terms( $post_id, $terms, $taxonomy );
-
-    if ( is_wp_error( $result ) ) {
-        error_log( sprintf( 'Failed to assign donor terms to post ID %d: %s', $post_id, $result->get_error_message() ) );
-    } else {
-        error_log( sprintf( 'Donor terms assigned to post ID %d: %s', $post_id, implode( ', ', $terms ) ) );
-    }
-}
-
 /**
  * Set Transaction Think Tank Data
  *
@@ -322,68 +320,42 @@ function process_donors() : void {
  * @return void
  */
 function delete_posts( int $import_id, int $batch_size = 100 ): void {
-    $taxonomy_map = array(
-        8 => 'transaction',
-        5 => 'donor',
-        4 => 'donor',
-        3 => 'think_tank',
-    );
+	$taxonomy_map = array(
+		8 => 'transaction',
+		5 => 'donor',
+		4 => 'donor',
+		3 => 'think_tank',
+	);
 
-    if ( isset( $taxonomy_map[ $import_id ] ) ) {
-        $import = new \PMXI_Import_Record();
-        $import->getById( $import_id );
-        $import->deletePosts( true );
+	if ( isset( $taxonomy_map[ $import_id ] ) ) {
 
-        $post_type = $taxonomy_map[ $import_id ];
-        $post_ids = get_posts(
-            array(
-                'post_type'      => $post_type,
-                'posts_per_page' => -1,
-                'fields'         => 'ids',
-                'status'         => 'any',
-            )
-        );
+		global $wpdb;
+		$table = $wpdb->prefix . 'pmxi_posts';
 
-        if ( ! empty( $post_ids ) && ! is_wp_error( $post_ids ) ) {
-            error_log( sprintf( 'There are %d posts remaining to be deleted.', count( $post_ids ) ) );
+		$query    = $wpdb->prepare( "SELECT `post_id` FROM `{$table}` WHERE `import_id` = %d", $import_id );
+		$post_ids = $wpdb->get_results( $query, ARRAY_A );
 
-            $post_batches = array_chunk( $post_ids, $batch_size );
+		if ( ! empty( $post_ids ) && ! is_wp_error( $post_ids ) ) {
+			error_log( sprintf( 'There are %d posts to be deleted.', count( $post_ids ) ) );
 
-            foreach ( $post_batches as $batch ) {
-                foreach ( $batch as $post_id ) {
-                    wp_delete_post( $post_id, true );
-                }
-            }
-        }
+			$post_batches = array_chunk( wp_list_pluck( $post_ids, 'post_id' ), $batch_size );
 
-        $taxonomy = $taxonomy_map[ $import_id ];
-        $term_ids = get_terms(
-            array(
-                'taxonomy'   => $taxonomy,
-                'fields'     => 'ids',
-                'hide_empty' => false,
-            )
-        );
+			foreach ( $post_batches as $batch ) {
+				foreach ( $batch as $post_id ) {
+					delete_post_term( $post_id );
 
-        if ( is_wp_error( $term_ids ) ) {
-            error_log( sprintf( 'Error retrieving terms for taxonomy %s: %s', $taxonomy, $term_ids->get_error_message() ) );
-            return;
-        }
-
-        if ( ! empty( $term_ids ) ) {
-            $term_batches = array_chunk( $term_ids, $batch_size );
-
-            foreach ( $term_batches as $batch ) {
-                foreach ( $batch as $term_id ) {
-                    $deleted = wp_delete_term( $term_id, $taxonomy );
-                    $message = $deleted
-                        ? sprintf( 'Term %d deleted from taxonomy %s.', $term_id, $taxonomy )
-                        : sprintf( 'Failed to delete term %d from taxonomy %s.', $term_id, $taxonomy );
-                    error_log( $message );
-                }
-            }
-        }
-    }
+					$deleted = wp_delete_post( $post_id, true );
+					if ( $deleted ) {
+						$message = sprintf( 'Deleted post ID %d.', $post_id );
+						log_progress_message( $message );
+						error_log( $message );
+					} else {
+						error_log( "Failed to delete post ID {$post_id}" );
+					}
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -602,6 +574,18 @@ function get_donor_post_ids( string $donor = '' ): array {
 	$query = new \WP_Query( $args );
 
 	return $query->have_posts() ? $query->posts : array();
+}
+
+/**
+ * Log progress message.
+ *
+ * @param string $message Message to log.
+ * @return void
+ */
+function log_progress_message( string $message ): void {
+    $time = esc_html( date( 'H:i:s' ) );
+    echo "<div class='progress-msg'>[{$time}] " . esc_html( $message ) . "</div>";
+    flush();
 }
 
 /**
