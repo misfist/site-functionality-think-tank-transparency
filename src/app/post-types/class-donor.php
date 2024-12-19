@@ -76,50 +76,57 @@ class Donor extends Post_Type {
 				'show_in_rest' => true,
 			),
 			array(
+				'label'        => __( 'Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
 				'label'        => __( 'Cumulative Amount', 'site-functionality' ),
-				'key'          => 'amount_cumulative',
+				'key'          => 'amount',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Cumulative Min Amount', 'site-functionality' ),
-				'key'          => 'amount_min_cumulative',
+				'key'          => 'amount_min',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Cumulative Max Amount', 'site-functionality' ),
-				'key'          => 'amount_max_cumulative',
+				'key'          => 'amount_max',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Cumulative Actual + Min Amount', 'site-functionality' ),
-				'key'          => 'amount_calc_cumulative',
+				'key'          => 'amount_calc',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Domestic Funding', 'site-functionality' ),
-				'key'          => 'amount_domestic_cumulative',
+				'key'          => 'amount_u-s-government',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Foreign Interest Funding', 'site-functionality' ),
-				'key'          => 'amount_foreign_cumulative',
+				'key'          => 'amount_foreign-government',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
 			),
 			array(
 				'label'        => __( 'Pentagon Contractor Funding', 'site-functionality' ),
-				'key'          => 'amount_defense_cumulative',
+				'key'          => 'amount_pentagon-contractor',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
@@ -162,6 +169,8 @@ class Donor extends Post_Type {
 		\add_action( 'acf/init', array( $this, 'register_fields' ) );
 		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
 		\add_filter( 'post_type_link', array( $this, 'redirect_to_parent' ), 10, 2 );
+		\add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
+
 	}
 
 	/**
@@ -209,15 +218,7 @@ class Donor extends Post_Type {
 	 *
 	 * @return void
 	 */
-	public function rewrite_rules() : void {
-		add_rewrite_tag( '%donor%', '([^&]+)' );
-		add_rewrite_tag( '%think-tank%', '([^&]+)' );
-		add_rewrite_tag( '%type%', '([^&]+)' );
-
-		$regex = self::POST_TYPE['slug'] . '/([a-z0-9-]+)[/]?$';
-
-		add_rewrite_rule( $regex, 'index.php?food=$matches[1]', 'top' );
-	}
+	public function rewrite_rules() : void {}
 
 	/**
 	 * Set Post Order
@@ -250,6 +251,56 @@ class Donor extends Post_Type {
 			$permalink = get_permalink( $post->post_parent );
 		}
 		return $permalink;
+	}
+
+	/**
+	 * Add Meta Box
+	 *
+	 * @return void
+	 */
+	public function add_meta_box(): void {
+		$screens = array( self::POST_TYPE['id'] );
+		foreach ( $screens as $screen ) {
+			add_meta_box(
+				'post_meta_table',
+				esc_html__( 'Field Data', 'site-functionality' ),
+				array( $this, 'render_meta_box' ),
+				$screen
+			);
+		}
+	}
+
+	/**
+	 * Render table on post edit screen
+	 *
+	 * @param  \WP_Post $post
+	 * @return void
+	 */
+	public function render_meta_box( $post ): void {
+		$post_id              = $post->ID;
+		$parent_obj           = get_post_parent( $post_id );
+		$amount               = get_post_meta( $post_id, 'amount_calc', true );
+		$donor_type           = get_the_term_list( $post_id, 'donor_type' );
+		$parent               = ( ! empty( $parent_obj ) && ! is_wp_error( $parent_obj ) ) ? $parent_obj->post_title : '';
+	
+		?>
+		<table class="wp-block-table">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Min. Amount', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'Donor Type', 'site-functionality' ); ?></th>
+					<th><?php esc_html_e( 'Parent Donor', 'site-functionality' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><?php echo sprintf( '$%s', number_format( $amount ) ); ?></td>
+					<td><?php echo $donor_type; ?></td>
+					<td><?php echo $parent_obj->post_title; ?></td>
+				</tr>
+			</tbody>
+		</table>
+		<?php
 	}
 
 }

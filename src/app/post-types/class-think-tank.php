@@ -47,14 +47,14 @@ class Think_Tank extends Post_Type {
 	public function init(): void {
 		parent::init();
 
-		$args        = array(
+		$args                      = array(
 			'taxonomy'   => 'donor_type',
 			'fields'     => 'slugs',
 			'hide_empty' => false,
 		);
-		$donor_types = get_terms( $args );
+		$donor_types               = get_terms( $args );
 		$this->data['donor_types'] = ( ! is_wp_error( $donor_types ) && ! empty( $donor_types ) ) ? $donor_types : array();
-		$donor_array = array_fill_keys( $this->data['donor_types'], 'string' );
+		$donor_array               = array_fill_keys( $this->data['donor_types'], 'string' );
 
 		$this->data['fields'] = array(
 			array(
@@ -74,6 +74,13 @@ class Think_Tank extends Post_Type {
 			array(
 				'label'        => __( 'Limit Information', 'site-functionality' ),
 				'key'          => 'limited_info',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
@@ -151,6 +158,27 @@ class Think_Tank extends Post_Type {
 			array(
 				'label'        => __( 'Pentagon Contractor Funding', 'site-functionality' ),
 				'key'          => 'amount_pentagon-contractor',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Domestic Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed_u-s-government',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Foreign Interest Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed_foreign-government',
+				'single'       => true,
+				'type'         => 'string',
+				'show_in_rest' => true,
+			),
+			array(
+				'label'        => __( 'Pentagon Contractor Undisclosed', 'site-functionality' ),
+				'key'          => 'undisclosed_pentagon-contractor',
 				'single'       => true,
 				'type'         => 'string',
 				'show_in_rest' => true,
@@ -291,14 +319,22 @@ class Think_Tank extends Post_Type {
 	public function render_meta_box( $post ): void {
 		$post_id              = $post->ID;
 		$amount               = get_post_meta( $post_id, 'amount_calc', true );
-		$amount_domestic      = get_post_meta( $post_id, 'amount_domestic', true );
-		$amount_foreign       = get_post_meta( $post_id, 'amount_foreign', true );
-		$amount_defense       = get_post_meta( $post_id, 'amount_defense', true );
+		$amount_domestic      = get_post_meta( $post_id, 'amount_u-s-government', true );
+		$amount_foreign       = get_post_meta( $post_id, 'amount_foreign-government', true );
+		$amount_defense       = get_post_meta( $post_id, 'amount_pentagon-contractor', true );
+		$undisclosed_domestic = get_post_meta( $post_id, 'undisclosed_u-s-government', true );
+		$undisclosed_foreign  = get_post_meta( $post_id, 'undisclosed_foreign-government', true );
+		$undisclosed_defense  = get_post_meta( $post_id, 'undisclosed_pentagon-contractor', true );
+
 		$no_defense_accepted  = get_post_meta( $post_id, 'no_defense_accepted', true );
 		$no_domestic_accepted = get_post_meta( $post_id, 'no_domestic_accepted', true );
 		$no_foreign_accepted  = get_post_meta( $post_id, 'no_foreign_accepted', true );
-		$limited_info         = get_post_meta( $post_id, 'limited_info', true );
-		$transparency_score   = get_post_meta( $post_id, 'transparency_score', true );
+
+		$undisclosed        = get_post_meta( $post_id, 'undisclosed', true );
+		$limited_info       = get_post_meta( $post_id, 'limited_info', true );
+		$transparency_score = get_post_meta( $post_id, 'transparency_score', true );
+		$settings           = get_option( 'site_settings' );
+		$unknown_text	   = ( isset( $settings['unknown_amount'] ) ) ? $settings['unknown_amount'] : esc_attr__( 'Unknown Amount', 'site-functionality' );
 
 		?>
 		<table class="wp-block-table">
@@ -317,15 +353,15 @@ class Think_Tank extends Post_Type {
 			</thead>
 			<tbody>
 				<tr>
-					<td><?php esc_html_e( $amount, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $amount_domestic, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $amount_foreign, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $amount_defense, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $no_defense_accepted, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $no_domestic_accepted, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $no_foreign_accepted, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $limited_info, 'site-functionality' ); ?></td>
-					<td><?php esc_html_e( $transparency_score, 'site-functionality' ); ?></td>
+					<td><?php echo ( $undisclosed ) ? sprintf( '<span class="not-disclosed">%s</span>', esc_attr__( 'Unknown Amts', 'site-functionality' ) ) : sprintf( '$%s', number_format( $amount ) ); ?></td>
+					<td><?php echo ( $undisclosed_domestic ) ? sprintf( '<span class="not-disclosed">%s</span>', $unknown_text ) : sprintf( '$%s', number_format( $amount_domestic ) ); ?></td>
+					<td><?php echo ( $undisclosed_foreign ) ? sprintf( '<span class="not-disclosed">%s</span>', $unknown_text ) : sprintf( '$%s', number_format( $amount_foreign ) ); ?></td>
+					<td><?php echo ( $undisclosed_defense ) ? sprintf( '<span class="not-disclosed">%s</span>', $unknown_text ) : sprintf( '$%s', number_format( $amount_defense ) ); ?></td>
+					<td><?php echo $no_defense_accepted; ?></td>
+					<td><?php echo $no_domestic_accepted; ?></td>
+					<td><?php echo $no_foreign_accepted; ?></td>
+					<td><?php echo $limited_info; ?></td>
+					<td><?php echo (int) $transparency_score; ?></td>
 				</tr>
 			</tbody>
 		</table>
