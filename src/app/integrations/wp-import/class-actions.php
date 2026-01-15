@@ -80,6 +80,10 @@ class Actions extends Base {
 	 */
 	public function disable_duplicate_check( $is_check_duplicates, $import_id ) {
 		if ( $this->data['transactions_import_id'] === (int) $import_id ) {
+			self::log(
+				__METHOD__,
+				sprintf( 'Disabling dupes for import: %s', $import_id )
+			);
 			return false;
 		}
 
@@ -386,7 +390,6 @@ class Actions extends Base {
 				'hide_empty' => false,
 			)
 		);
-
 
 		if ( is_wp_error( $donor_types ) || empty( $donor_types ) ) {
 			self::log( __METHOD__, 'No donor_type terms returned; skipping donor_type rollups.' );
