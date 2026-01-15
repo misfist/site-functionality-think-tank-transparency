@@ -87,4 +87,31 @@ abstract class Base {
 	public function get_data( $prop ) {
 		return $this->data[ $prop ];
 	}
+
+	/**
+	 * Write a debug entry.
+	 *
+	 * @param string      $method   Calling method (use __METHOD__).
+	 * @param string      $message  Debug message.
+	 * @param string|null $file     Optional absolute log file path.
+	 * @return void
+	 */
+	public static function log( string $method, string $message, ?string $file = null ): void {
+		$entry = sprintf(
+			"[%s] %s\n\n",
+			$method,
+			$message
+		);
+
+		if ( $file ) {
+			$directory = dirname( $file );
+
+			if ( is_dir( $directory ) && is_writable( $directory ) ) {
+				file_put_contents( $file, $entry, FILE_APPEND );
+				return;
+			}
+		}
+
+		error_log( $entry );
+	}
 }
