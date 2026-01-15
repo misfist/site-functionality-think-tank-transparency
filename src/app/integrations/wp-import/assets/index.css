@@ -1,0 +1,48 @@
+/* assets/css/wpai-runner.css */
+.site-functionality-wpai-columns {
+	display: flex;
+	gap: 24px;
+}
+
+.site-functionality-wpai-column {
+	flex: 1;
+	min-width: 360px;
+}
+
+.site-functionality-wpai-run-list {
+	list-style: none;
+	margin: 12px 0;
+	padding: 0;
+	border: 1px solid #ccd0d4;
+	background: #fff;
+}
+
+.site-functionality-wpai-run-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px;
+	border-bottom: 1px solid #e2e4e7;
+	cursor: grab;
+}
+
+.site-functionality-wpai-run-item:last-child {
+	border-bottom: none;
+}
+
+.site-functionality-wpai-run-item.is-dragging {
+	opacity: 0.5;
+}
+
+.site-functionality-wpai-handle {
+	cursor: grab;
+	user-select: none;
+	font-weight: 700;
+	width: 18px;
+	text-align: center;
+}
+
+.site-functionality-wpai-list .site-functionality-wpai-row {
+	display: block;
+	padding: 6px 0;
+}
