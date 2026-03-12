@@ -135,18 +135,18 @@ class Donor extends Post_Type {
 				'label'        => __( 'Cumulative Data', 'site-functionality' ),
 				'key'          => 'cumulative_data',
 				'single'       => true,
-				'type'         => 'array',
+				'type'         => 'object',
 				'show_in_rest' => array(
 					'schema' => array(
-						'type'  => 'array',
-						'items' => array(
-							'amount'          => 'integer',
-							'amount_min'      => 'integer',
-							'amount_max'      => 'integer',
-							'amount_calc'     => 'integer',
-							'amount_domestic' => 'integer',
-							'amount_foreign'  => 'integer',
-							'amount_defense'  => 'integer',
+						'type'       => 'object',
+						'properties' => array(
+							'amount'          => array( 'type' => 'integer' ),
+							'amount_min'      => array( 'type' => 'integer' ),
+							'amount_max'      => array( 'type' => 'integer' ),
+							'amount_calc'     => array( 'type' => 'integer' ),
+							'amount_domestic' => array( 'type' => 'integer' ),
+							'amount_foreign'  => array( 'type' => 'integer' ),
+							'amount_defense'  => array( 'type' => 'integer' ),
 						),
 					),
 				),
