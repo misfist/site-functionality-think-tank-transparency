@@ -4,11 +4,12 @@
  *
  * @package site-functionality
  */
+
 namespace Site_Functionality\Integrations\WP_Import;
 
 use Site_Functionality\Common\Abstracts\Base;
-use \WP_CLI as WP_CLI;
-use  Site_Functionality\App\Taxonomies\Taxonomies;
+use Site_Functionality\App\Taxonomies\Taxonomies;
+use WP_CLI;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,6 +22,8 @@ class Actions extends Base {
 	 * Constructor.
 	 *
 	 * @since 1.0.0
+	 *
+	 * @param array $settings Settings.
 	 */
 	public function __construct( $settings = array() ) {
 		parent::__construct( $settings );
@@ -35,13 +38,29 @@ class Actions extends Base {
 	public function init(): void {
 		$this->data['parent_name_meta']       = 'donor_parent_name';
 		$this->data['transactions_import_id'] = 8;
-		$this->data['donors_import_id']       = 6;
-		$this->data['taxonomies']             = array( 'donor_type', 'donor', 'think_tank', 'year' );
+		$this->data['donors_import_id']       = 5;
+		$this->data['taxonomies']             = array(
+			'donor_type',
+			'donor',
+			'think_tank',
+			'donation_year',
+		);
 
+		$this->data['taxonomy_map'] = array(
+			8 => 'transaction',
+			5 => 'donor',
+			4 => 'donor',
+			3 => 'think_tank',
+			2 => 'donor_type',
+			1 => 'donation_year',
+		);
+
+		add_action( 'pmxi_before_xml_import', array( $this, 'before_import' ), 10, 1 );
 		add_action( 'pmxi_saved_post', array( $this, 'set_donor_parent' ), 10, 1 );
 		add_action( 'pmxi_saved_post', array( $this, 'set_transaction_donor_data' ), 10, 1 );
 		add_action( 'pmxi_after_xml_import', array( $this, 'set_cumulative_values' ), 10, 2 );
-		add_action( 'pmxi_before_xml_import', array( $this, 'before_import' ), 10, 1 );
+
+		add_filter( 'wp_all_import_is_check_duplicates', array( $this, 'disable_duplicate_check' ), 10, 2 );
 
 		// \add_action( 'pmxi_saved_post', array( $this, 'set_donor_parent' ), 10, 1 );
 		// \add_action( 'pmxi_saved_post', array( $this, 'set_transaction_donor_parent' ), 10, 1 );
@@ -50,6 +69,25 @@ class Actions extends Base {
 		// \add_action( 'pmxi_after_xml_import', array( $this, 'set_transaction_data_after_import' ), 10, 2 );
 
 		// add_action( 'pmxi_saved_post', array( $this, 'set_transaction_think_tank' ), 10, 1 );
+	}
+
+	/**
+	 * Disable duplicate checks for a single import ID.
+	 *
+	 * @param bool $is_check_duplicates Whether to check duplicates.
+	 * @param int  $import_id           Import ID.
+	 * @return bool
+	 */
+	public function disable_duplicate_check( $is_check_duplicates, $import_id ) {
+		if ( $this->data['transactions_import_id'] === (int) $import_id ) {
+			self::log(
+				__METHOD__,
+				sprintf( 'Disabling dupes for import: %s', $import_id )
+			);
+			return false;
+		}
+
+		return $is_check_duplicates;
 	}
 
 	/**
@@ -91,10 +129,16 @@ class Actions extends Base {
 
 		$donor_parent_posts = get_posts( $args );
 
-		if ( ! empty( $donor_parent_posts ) ) {
+		if ( ! empty( $donor_parent_posts ) && ! is_wp_error( $donor_parent_posts ) ) {
 			$donor_parent_id = $donor_parent_posts[0];
 
-			$parent_terms = wp_get_post_terms( $donor_parent_id, $donor_type_taxonomy, array( 'fields' => 'ids' ) );
+			$parent_terms = wp_get_post_terms(
+				$donor_parent_id,
+				$donor_type_taxonomy,
+				array(
+					'fields' => 'ids',
+				)
+			);
 
 			$post_data = array(
 				'ID'          => $post_id,
@@ -108,7 +152,13 @@ class Actions extends Base {
 				),
 			);
 
-			wp_update_post( $post_data );
+			$updated = wp_update_post( $post_data );
+
+			self::log(
+				__METHOD__,
+				sprintf( 'Post ID %d was updated with donor parent?: %s', $post_id, (bool) $updated ? 'true' : 'false' )
+			);
+
 		}
 	}
 
@@ -126,7 +176,10 @@ class Actions extends Base {
 		$post_type = 'transaction';
 
 		if ( $post_type !== get_post_type( $post_id ) ) {
-			error_log( sprintf( 'Post ID %d is not of type %s.', $post_id, $post_type ) );
+			self::log(
+				__METHOD__,
+				sprintf( 'Post ID %d is not of type %s.', $post_id, $post_type )
+			);
 			return;
 		}
 
@@ -134,14 +187,20 @@ class Actions extends Base {
 		$donor_name = get_post_meta( $post_id, 'donor_name', true );
 
 		if ( empty( $donor_name ) ) {
-			error_log( sprintf( 'No donor name found for post ID %d.', $post_id ) );
+			self::log(
+				__METHOD__,
+				sprintf( 'No donor name found for post ID %d.', $post_id )
+			);
 			return;
 		}
 
 		$donor_term = get_term_by( 'name', $donor_name, $taxonomy );
 
 		if ( empty( $donor_term ) || is_wp_error( $donor_term ) ) {
-			error_log( sprintf( 'Donor term %s does not exist.', $donor_name ) );
+			self::log(
+				__METHOD__,
+				sprintf( 'Donor term %s does not exist.', $donor_name )
+			);
 			return;
 		}
 
@@ -151,19 +210,34 @@ class Actions extends Base {
 			array_unshift( $terms, $parent_id );
 		}
 
-		$current_donor_terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids' ) );
+		$current_donor_terms = wp_get_post_terms(
+			$post_id,
+			$taxonomy,
+			array(
+				'fields' => 'ids',
+			)
+		);
 
-		if ( $current_donor_terms === $terms ) {
-			error_log( sprintf( 'Terms are already correctly assigned for post ID %d.', $post_id ) );
+		if ( ! array_diff( $terms, $current_donor_terms ) ) {
+			self::log(
+				__METHOD__,
+				sprintf( 'Terms are already correctly assigned for post ID %d.', $post_id )
+			);
 			return;
 		}
 
 		$result = wp_set_post_terms( $post_id, $terms, $taxonomy );
 
 		if ( is_wp_error( $result ) ) {
-			error_log( sprintf( 'Failed to assign donor terms to post ID %d: %s', $post_id, $result->get_error_message() ) );
+			self::log(
+				__METHOD__,
+				sprintf( 'Failed to assign donor terms to post ID %d: %s', $post_id, $result->get_error_message() )
+			);
 		} else {
-			error_log( sprintf( 'Donor terms assigned to post ID %d: %s', $post_id, implode( ', ', $terms ) ) );
+			self::log(
+				__METHOD__,
+				sprintf( 'Donor terms assigned to post ID %d: %s', $post_id, implode( ', ', $terms ) )
+			);
 		}
 	}
 
@@ -175,22 +249,29 @@ class Actions extends Base {
 	 *
 	 * @see https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_after_xml_import
 	 *
+	 * @param int   $import_id Import ID.
+	 * @param mixed $import    Import object.
 	 * @return void
 	 */
-	public function set_cumulative_values( int $import_id, $import ) : void {
-		if ( 8 !== $import_id ) {
+	public function set_cumulative_values( int $import_id, $import ): void {
+		if ( $this->data['transactions_import_id'] !== $import_id ) {
 			return;
 		}
 		$this->process_think_tanks();
 		$this->process_donors();
+
+		self::log(
+			__METHOD__,
+			sprintf( 'Post import action run for Import ID: %d', $import_id )
+		);
 	}
 
 	/**
 	 * Run before import
-	 * 
+	 *
 	 * @link https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_before_xml_import
 	 *
-	 * @param  integer $import_id
+	 * @param int $import_id Import ID.
 	 * @return void
 	 */
 	public function before_import( int $import_id ): void {
@@ -203,7 +284,7 @@ class Actions extends Base {
 	 *
 	 * @return void
 	 */
-	public function set_transactions_data() : void {
+	public function set_transactions_data(): void {
 		$post_type = 'transaction';
 
 		$args = array(
@@ -229,28 +310,32 @@ class Actions extends Base {
 	 *
 	 * @link https://www.wpallimport.com/documentation/developers/action-hooks/pmxi_saved_post/ Documentation for `pmxi_saved_post` action hook.
 	 *
-	 * @param  integer $post_id
+	 * @param int $post_id Post ID.
 	 * @return void
 	 */
-	public function set_transaction_data( int $post_id ) : void {
+	public function set_transaction_data( int $post_id ): void {
 		$post_type = 'transaction';
 		if ( $post_type !== get_post_type( $post_id ) ) {
 			return;
 		}
 		$this->set_transaction_donor_data( $post_id );
+
 		$message = sprintf( '%s run for post ID %d.', esc_attr( __NAMESPACE__ . '\set_transaction_data' ), $post_id );
-		// error_log( $message );
+		// self::log( __METHOD__, $message );
+
 		// set_transaction_think_tank_data( $post_id );
 		// set_transaction_year_data( $post_id );
 	}
+
 	/**
 	 * Set Transaction Think Tank Data
 	 *
-	 * @param  integer $post_id
+	 * @param int $post_id Post ID.
 	 * @return void
 	 */
-	public function set_transaction_think_tank_data( int $post_id ) : void {
+	public function set_transaction_think_tank_data( int $post_id ): void {
 		$term_name = get_post_meta( $post_id, 'think_tank', true );
+		$term_name = trim( wp_strip_all_tags( (string) $term_name ) );
 		$taxonomy  = 'think_tank';
 
 		$term = get_term_by( 'name', $term_name, $taxonomy );
@@ -263,11 +348,12 @@ class Actions extends Base {
 	/**
 	 * Set Transaction Year Data
 	 *
-	 * @param  integer $post_id
+	 * @param int $post_id Post ID.
 	 * @return void
 	 */
-	public function set_transaction_year_data( int $post_id ) : void {
+	public function set_transaction_year_data( int $post_id ): void {
 		$term_name = get_post_meta( $post_id, 'year', true );
+		$term_name = trim( wp_strip_all_tags( (string) $term_name ) );
 		$taxonomy  = 'donation_year';
 
 		$term = get_term_by( 'name', $term_name, $taxonomy );
@@ -299,34 +385,50 @@ class Actions extends Base {
 
 		$donor_types = get_terms(
 			array(
-				'taxonomy' => 'donor_type',
-				'fields'   => 'slugs',
+				'taxonomy'   => 'donor_type',
+				'fields'     => 'slugs',
+				'hide_empty' => false,
 			)
 		);
+
+		if ( is_wp_error( $donor_types ) || empty( $donor_types ) ) {
+			self::log( __METHOD__, 'No donor_type terms returned; skipping donor_type rollups.' );
+			return;
+		}
 
 		$processed_count = 0;
 
 		foreach ( $think_tanks as $post_id ) {
 			$think_tank = get_post_field( 'post_name', $post_id );
+			$think_tank = trim( wp_strip_all_tags( (string) $think_tank ) );
 
 			$sums = $this->get_think_tank_sums( $think_tank );
 
 			update_post_meta( $post_id, 'amount_calc', $sums['amount_calc'] );
 			update_post_meta( $post_id, 'undisclosed', $sums['undisclosed'] );
 
-			if ( ! empty( $donor_types ) ) {
-				foreach ( $donor_types as $donor_type ) {
-					$donor_type_sums = $this->get_think_tank_sums( $think_tank, $donor_type );
+			foreach ( $donor_types as $donor_type ) {
+				$donor_type_sums = $this->get_think_tank_sums( $think_tank, $donor_type );
 
-					update_post_meta( $post_id, 'amount_' . $donor_type, $donor_type_sums['amount_calc'] );
-					update_post_meta( $post_id, 'undisclosed_' . $donor_type, $donor_type_sums['undisclosed'] );
-				}
+				update_post_meta(
+					$post_id,
+					'amount_' . $donor_type,
+					$donor_type_sums['amount_calc']
+				);
+				update_post_meta(
+					$post_id,
+					'undisclosed_' . $donor_type,
+					$donor_type_sums['undisclosed']
+				);
 			}
 
-			$processed_count++;
+			++$processed_count;
 		}
 
-		error_log( "Processed $processed_count think tank posts." );
+		self::log(
+			__METHOD__,
+			sprintf( 'Processed %d think tank posts.', (int) $processed_count )
+		);
 	}
 
 	/**
@@ -334,7 +436,7 @@ class Actions extends Base {
 	 *
 	 * @return void
 	 */
-	public function process_donors() : void {
+	public function process_donors(): void {
 		$post_type = 'donor';
 		$args      = array(
 			'post_type'      => $post_type,
@@ -345,15 +447,35 @@ class Actions extends Base {
 		$posts = get_posts( $args );
 
 		if ( ! empty( $posts ) && ! is_wp_error( $posts ) ) {
+			$processed_count = 0;
+
 			foreach ( $posts as $post_id ) {
 				$donor = get_post_field( 'post_name', $post_id );
+				$donor = trim( wp_strip_all_tags( (string) $donor ) );
 
 				$sums = $this->get_donor_sums( $donor );
 
-				add_post_meta( $post_id, 'amount_calc', $sums['amount_calc'], true );
-				add_post_meta( $post_id, 'undisclosed', $sums['undisclosed'], true );
+				add_post_meta(
+					$post_id,
+					'amount_calc',
+					$sums['amount_calc'],
+					true
+				);
+				add_post_meta(
+					$post_id,
+					'undisclosed',
+					$sums['undisclosed'],
+					true
+				);
+
+				++$processed_count;
 			}
 		}
+
+		self::log(
+			__METHOD__,
+			sprintf( 'Processed %d donor posts.', (int) $processed_count )
+		);
 	}
 
 	/**
@@ -361,17 +483,12 @@ class Actions extends Base {
 	 *
 	 * @link https://www.wpallimport.com/documentation/developers/action-reference/#pmxi_before_xml_import
 	 *
-	 * @param int $import_id The ID of the import process.
+	 * @param int $import_id  The ID of the import process.
 	 * @param int $batch_size The number of posts to delete in each batch. Default is 100.
 	 * @return void
 	 */
 	public function delete_posts( int $import_id, int $batch_size = 100 ): void {
-		$taxonomy_map = array(
-			8 => 'transaction',
-			5 => 'donor',
-			4 => 'donor',
-			3 => 'think_tank',
-		);
+		$taxonomy_map = $this->data['taxonomy_map'];
 
 		if ( isset( $taxonomy_map[ $import_id ] ) ) {
 			$taxonomy = $taxonomy_map[ $import_id ];
@@ -383,13 +500,16 @@ class Actions extends Base {
 			$post_ids = $wpdb->get_results( $query, ARRAY_A );
 
 			if ( ! empty( $post_ids ) && ! is_wp_error( $post_ids ) ) {
-				error_log( sprintf( 'There are %d posts to be deleted.', count( $post_ids ) ) );
+				self::log(
+					__METHOD__,
+					sprintf( 'There are %d posts to be deleted.', count( $post_ids ) )
+				);
 
 				$post_batches = array_chunk( wp_list_pluck( $post_ids, 'post_id' ), $batch_size );
 
 				foreach ( $post_batches as $batch ) {
 					foreach ( $batch as $post_id ) {
-						if( taxonomy_exists( $taxonomy ) ) {
+						if ( taxonomy_exists( $taxonomy ) ) {
 							$this->delete_post_term( $post_id );
 						}
 
@@ -397,9 +517,12 @@ class Actions extends Base {
 						if ( $deleted ) {
 							$message = sprintf( 'Deleted post ID %d.', $post_id );
 							$this->log_progress_message( $message );
-							error_log( $message );
+							self::log( __METHOD__, $message );
 						} else {
-							error_log( "Failed to delete post ID {$post_id}" );
+							self::log(
+								__METHOD__,
+								sprintf( 'Failed to delete post ID %d', $post_id )
+							);
 						}
 					}
 				}
@@ -412,8 +535,7 @@ class Actions extends Base {
 	 *
 	 * @uses get_term_id_from_post_id()
 	 *
-	 * @param  integer $post_id
-	 * @param  array   $import
+	 * @param int $post_id Post ID.
 	 * @return void
 	 */
 	public function delete_post_term( int $post_id ): void {
@@ -425,9 +547,12 @@ class Actions extends Base {
 			if ( $deleted ) {
 				$message = sprintf( 'Term %d deleted for post ID %d.', $term_id, $post_id );
 				$this->log_progress_message( $message );
-				error_log( $message );
+				self::log( __METHOD__, $message );
 			} else {
-				error_log( sprintf( 'Failed to delete term %d for post ID %d.', $term_id, $post_id ) );
+				self::log(
+					__METHOD__,
+					sprintf( 'Failed to delete term %d for post ID %d.', $term_id, $post_id )
+				);
 			}
 		}
 	}
@@ -435,9 +560,9 @@ class Actions extends Base {
 	/**
 	 * Get term ID from post ID
 	 *
-	 * @param  integer $post_id
-	 * @param  string  $taxonomy
-	 * @return integer|null
+	 * @param int    $post_id  Post ID.
+	 * @param string $taxonomy Taxonomy.
+	 * @return int|null
 	 */
 	public function get_term_id_from_post_id( int $post_id, string $taxonomy ): ?int {
 		$terms = wp_get_post_terms(
@@ -458,8 +583,9 @@ class Actions extends Base {
 	 * @return int|null The parent term ID, or null if the term does not exist.
 	 */
 	public function get_donor_parent_id_from_name( string $donor_name ): ?int {
-		$taxonomy = 'donor';
-		$term     = get_term_by( 'name', $donor_name, $taxonomy );
+		$taxonomy   = 'donor';
+		$donor_name = trim( wp_strip_all_tags( (string) $donor_name ) );
+		$term       = get_term_by( 'name', $donor_name, $taxonomy );
 
 		return ( ! empty( $term ) ) ? $term[0]->term_id : null;
 	}
@@ -472,7 +598,8 @@ class Actions extends Base {
 	 * @return string The term hierarchy as a formatted string, or an empty string if the term does not exist.
 	 */
 	public function get_term_hierarchy( string $term_name, string $taxonomy = 'donor' ): string {
-		$term = get_term_by( 'name', $term_name, $taxonomy );
+		$term_name = trim( wp_strip_all_tags( (string) $term_name ) );
+		$term      = get_term_by( 'name', $term_name, $taxonomy );
 
 		if ( ! $term || is_wp_error( $term ) ) {
 			return '';
@@ -579,9 +706,10 @@ class Actions extends Base {
 
 		if ( ! empty( $donor ) ) {
 			$args['tax_query'][] = array(
-				'taxonomy' => 'donor',
-				'field'    => 'slug',
-				'terms'    => $donor,
+				'taxonomy'         => 'donor',
+				'field'            => 'slug',
+				'terms'            => $donor,
+				'include_children' => true,
 			);
 		}
 
@@ -590,7 +718,7 @@ class Actions extends Base {
 		return $query->have_posts() ? $query->posts : array();
 	}
 
-		/**
+	/**
 	 * Get the sum of `amount_calc` for a given array of post IDs.
 	 *
 	 * @param array $post_ids Array of post IDs.
@@ -640,8 +768,7 @@ class Actions extends Base {
 	 */
 	public function log_progress_message( string $message ): void {
 		$time = esc_html( date( 'H:i:s' ) );
-		echo "<div class='progress-msg'>[{$time}] " . esc_html( $message ) . "</div>";
+		echo "<div class='progress-msg'>[{$time}] " . esc_html( $message ) . '</div>';
 		flush();
 	}
-
 }

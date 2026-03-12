@@ -294,7 +294,7 @@ class Donor extends Post_Type {
 			</thead>
 			<tbody>
 				<tr>
-					<td><?php echo sprintf( '$%s', number_format( $amount ) ); ?></td>
+					<td><?php echo sprintf( '$%s', ( $amount ) ? number_format( $amount ) : '' ); ?></td>
 					<td><?php echo $donor_type; ?></td>
 					<td><?php echo $parent_obj->post_title; ?></td>
 				</tr>

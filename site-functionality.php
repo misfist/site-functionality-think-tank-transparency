@@ -15,7 +15,7 @@
  * Plugin Name:       Site Functionality
  * Plugin URI:        https://github.com/misfist/rkc-plugin/
  * Description:       Custom WordPress functionality.
- * Version:           1.0.5
+ * Version:           1.0.6
  * Requires PHP:      8.0
  * Requires at least: 6.5
  * Author:            Pea
@@ -47,7 +47,7 @@ require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'SITE_FUNCTIONALITY_VERSION', '1.0.5' );
+define( 'SITE_FUNCTIONALITY_VERSION', '1.0.6' );
 define( 'SITE_FUNCTIONALITY_BASENAME', plugin_basename( __FILE__ ) );
 define( 'SITE_FUNCTIONALITY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SITE_FUNCTIONALITY_URL', trailingslashit( plugins_url( plugin_basename( __DIR__ ) ) ) );
