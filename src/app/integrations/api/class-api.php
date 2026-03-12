@@ -94,7 +94,6 @@ class API {
 				'permission_callback' => '__return_true',
 			)
 		);
-
 	}
 
 	/**
@@ -107,19 +106,22 @@ class API {
 		foreach ( $this->settings['taxonomies'] as $taxonomy ) {
 			$args[ "{$taxonomy}" ]      = array(
 				'required'          => false,
-				'validate_callback' => function( $param, $request, $key ) {
+				'type'              => 'string',
+				'validate_callback' => function ( $param, $request, $key ) {
 					return is_string( $param ) || is_array( $param );
 				},
 			);
 			$args[ "{$taxonomy}_name" ] = array(
 				'required'          => false,
-				'validate_callback' => function( $param, $request, $key ) {
+				'type'              => 'string',
+				'validate_callback' => function ( $param, $request, $key ) {
 					return is_string( $param ) || is_array( $param );
 				},
 			);
 			$args[ "{$taxonomy}_id" ]   = array(
 				'required'          => false,
-				'validate_callback' => function( $param, $request, $key ) {
+				'type'              => 'integer',
+				'validate_callback' => function ( $param, $request, $key ) {
 					return is_numeric( $param );
 				},
 			);
@@ -127,23 +129,26 @@ class API {
 		foreach ( $this->settings['meta_keys'] as $meta_key ) {
 			$args[ $meta_key ] = array(
 				'required'          => false,
-				'validate_callback' => function( $param, $request, $key ) {
+				'type'              => 'string',
+				'validate_callback' => function ( $param, $request, $key ) {
 					return is_string( $param ) || is_numeric( $param );
 				},
 			);
 		}
 		$args['per_page'] = array(
 			'required'          => false,
+			'type'              => 'integer',
 			'default'           => $this->settings['default_posts_per_page'],
-			'validate_callback' => function( $param, $request, $key ) {
+			'validate_callback' => function ( $param, $request, $key ) {
 				return is_numeric( $param ) && $param > 0;
 			},
 		);
 
 		$args['table_type'] = array(
 			'required'          => false,
+			'type'              => 'string',
 			'default'           => $this->settings['default_table_type'],
-			'validate_callback' => function( $param, $request, $key ) {
+			'validate_callback' => function ( $param, $request, $key ) {
 				return is_string( $param );
 			},
 		);
@@ -159,19 +164,19 @@ class API {
 	public function handle_rest_request( \WP_REST_Request $request ) {
 		$params = array();
 
-		$params['table_type'] = ( $request->get_param( 'table_type' ) ) ? sanitize_text_field( $request->get_param( 'table_type' ) ) : $this->settings['default_table_type'];
-		$params['donor'] = ( $request->get_param( 'donors' ) ) ? sanitize_text_field( $request->get_param( 'donors' ) ) : '';
-		$params['think_tank'] = ( $request->get_param( 'think-tanks' ) ) ? sanitize_text_field( $request->get_param( 'think-tanks' ) ) : '';
+		$params['table_type']    = ( $request->get_param( 'table_type' ) ) ? sanitize_text_field( $request->get_param( 'table_type' ) ) : $this->settings['default_table_type'];
+		$params['donor']         = ( $request->get_param( 'donors' ) ) ? sanitize_text_field( $request->get_param( 'donors' ) ) : '';
+		$params['think_tank']    = ( $request->get_param( 'think-tanks' ) ) ? sanitize_text_field( $request->get_param( 'think-tanks' ) ) : '';
 		$params['donation_year'] = ( $request->get_param( 'years' ) ) ? sanitize_text_field( $request->get_param( 'years' ) ) : '';
-		$params['donor_type'] = ( $request->get_param( 'donor-types' ) ) ? sanitize_text_field( $request->get_param( 'donor-types' ) ) : '';
-		$data = array();
-		
-		$route = $request->get_route();
+		$params['donor_type']    = ( $request->get_param( 'donor-types' ) ) ? sanitize_text_field( $request->get_param( 'donor-types' ) ) : '';
+		$data                    = array();
+
+		$route       = $request->get_route();
 		$route_array = explode( '/', $route );
 
-		if( 'transaction-data' === end( $route_array ) ) {
+		if ( 'transaction-data' === end( $route_array ) ) {
 			// $data = $this->get_table_data( $params );
-		} elseif( 'data-table' === end( $route_array ) ) {
+		} elseif ( 'data-table' === end( $route_array ) ) {
 			// $data = $this->get_data_table( $params );
 		}
 
@@ -179,21 +184,21 @@ class API {
 	}
 
 		/**
-	 * Get data table
-	 *
-	 * @param  array $params
-	 * @return array
-	 */
-	public function get_table_data( $params = array() ) : array {
-		$table_type = ( isset( $params['table_type'] ) ) ? sanitize_text_field( $params['table_type'] ) : sanitize_text_field( $this->settings['default_table_type'] );
-		$donor = ( isset( $params['donor'] ) ) ? sanitize_text_field( $params['donor'] ) : '';
-		$think_tank = ( isset( $params['think_tank'] ) ) ? sanitize_text_field( $params['think_tank'] ) : '';
+		 * Get data table
+		 *
+		 * @param  array $params
+		 * @return array
+		 */
+	public function get_table_data( $params = array() ): array {
+		$table_type    = ( isset( $params['table_type'] ) ) ? sanitize_text_field( $params['table_type'] ) : sanitize_text_field( $this->settings['default_table_type'] );
+		$donor         = ( isset( $params['donor'] ) ) ? sanitize_text_field( $params['donor'] ) : '';
+		$think_tank    = ( isset( $params['think_tank'] ) ) ? sanitize_text_field( $params['think_tank'] ) : '';
 		$donation_year = ( isset( $params['donation_year'] ) ) ? sanitize_text_field( $params['donation_year'] ) : '';
-		$donor_type = ( isset( $params['donor_type'] ) ) ? sanitize_text_field( $params['donor_type'] ) : '';
+		$donor_type    = ( isset( $params['donor_type'] ) ) ? sanitize_text_field( $params['donor_type'] ) : '';
 
 		$data = array();
 
-		if( $table_type ) {
+		if ( $table_type ) {
 			$data['details']['table_type'] = $table_type;
 
 			switch ( $table_type ) {
@@ -207,7 +212,7 @@ class API {
 					break;
 				case 'think-tank-archive':
 					$data = \Site_Functionality\Integrations\Data_Tables\Think_Tank::get_think_tank_archive_data( $donation_year );
-					
+
 					break;
 				case 'donor-archive':
 					$data = \Site_Functionality\Integrations\Data_Tables\Donor::get_donor_archive_data( $donation_year, $donor_type );
@@ -215,15 +220,14 @@ class API {
 					break;
 				case 'top-10':
 					break;
-		
+
 				default:
 					$data = \Site_Functionality\Integrations\Data_Tables\Think_Tank::generate_think_tank_table( $think_tank, $donation_year, $donor_type );
 
 					break;
 			}
-
 		}
-		
+
 		return $data;
 	}
 
@@ -233,18 +237,18 @@ class API {
 	 * @param  array $params
 	 * @return array
 	 */
-	public function get_data_table( $params = array() ) : array {
-		$table_type = ( isset( $params['table_type'] ) ) ? sanitize_text_field( $params['table_type'] ) : sanitize_text_field( $this->settings['default_table_type'] );
-		$donor = ( isset( $params['donor'] ) ) ? sanitize_text_field( $params['donor'] ) : '';
-		$think_tank = ( isset( $params['think_tank'] ) ) ? sanitize_text_field( $params['think_tank'] ) : '';
+	public function get_data_table( $params = array() ): array {
+		$table_type    = ( isset( $params['table_type'] ) ) ? sanitize_text_field( $params['table_type'] ) : sanitize_text_field( $this->settings['default_table_type'] );
+		$donor         = ( isset( $params['donor'] ) ) ? sanitize_text_field( $params['donor'] ) : '';
+		$think_tank    = ( isset( $params['think_tank'] ) ) ? sanitize_text_field( $params['think_tank'] ) : '';
 		$donation_year = ( isset( $params['donation_year'] ) ) ? sanitize_text_field( $params['donation_year'] ) : '';
-		$donor_type = ( isset( $params['donor_type'] ) ) ? sanitize_text_field( $params['donor_type'] ) : '';
+		$donor_type    = ( isset( $params['donor_type'] ) ) ? sanitize_text_field( $params['donor_type'] ) : '';
 
 		$data = array(
-			'details' => array()
+			'details' => array(),
 		);
 
-		if( $table_type ) {
+		if ( $table_type ) {
 			$data['details']['table_type'] = $table_type;
 
 			switch ( $table_type ) {
@@ -258,7 +262,7 @@ class API {
 					break;
 				case 'think-tank-archive':
 					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Think_Tank::generate_think_tank_archive_table( $donation_year );
-					
+
 					break;
 				case 'donor-archive':
 					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Donor::generate_donor_archive( $donation_year, $donor_type );
@@ -266,7 +270,7 @@ class API {
 					break;
 				case 'top-10':
 					break;
-		
+
 				default:
 					$data['content'] = \Site_Functionality\Integrations\Data_Tables\Think_Tank::generate_think_tank_table( $think_tank, $donation_year, $donor_type );
 
@@ -433,14 +437,14 @@ class API {
 
 		usort(
 			$data,
-			function( $a, $b ) {
+			function ( $a, $b ) {
 				return strcmp( $a['donor_name'] ?? '', $b['donor_name'] ?? '' );
 			}
 		);
 
 		usort(
 			$data,
-			function( $a, $b ) {
+			function ( $a, $b ) {
 				$year_a = isset( $a['donation_year'] ) ? (int) $a['donation_year'] : 0;
 				$year_b = isset( $b['donation_year'] ) ? (int) $b['donation_year'] : 0;
 				return $year_b - $year_a;
@@ -566,7 +570,7 @@ class API {
 		// Sort the data array by donor_name in ascending order
 		usort(
 			$data,
-			function( $a, $b ) {
+			function ( $a, $b ) {
 				return strcmp( $a['donor_name'] ?? '', $b['donor_name'] ?? '' );
 			}
 		);
@@ -678,5 +682,4 @@ class API {
 	public function get_term_ids_by_post_id( $post_id, $taxonomy ) {
 		return wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids' ) );
 	}
-
 }

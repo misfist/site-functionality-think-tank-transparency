@@ -135,18 +135,18 @@ class Donor extends Post_Type {
 				'label'        => __( 'Cumulative Data', 'site-functionality' ),
 				'key'          => 'cumulative_data',
 				'single'       => true,
-				'type'         => 'array',
+				'type'         => 'object',
 				'show_in_rest' => array(
 					'schema' => array(
-						'type'  => 'array',
-						'items' => array(
-							'amount'          => 'integer',
-							'amount_min'      => 'integer',
-							'amount_max'      => 'integer',
-							'amount_calc'     => 'integer',
-							'amount_domestic' => 'integer',
-							'amount_foreign'  => 'integer',
-							'amount_defense'  => 'integer',
+						'type'       => 'object',
+						'properties' => array(
+							'amount'          => array( 'type' => 'integer' ),
+							'amount_min'      => array( 'type' => 'integer' ),
+							'amount_max'      => array( 'type' => 'integer' ),
+							'amount_calc'     => array( 'type' => 'integer' ),
+							'amount_domestic' => array( 'type' => 'integer' ),
+							'amount_foreign'  => array( 'type' => 'integer' ),
+							'amount_defense'  => array( 'type' => 'integer' ),
 						),
 					),
 				),
@@ -170,7 +170,6 @@ class Donor extends Post_Type {
 		\add_action( 'pre_get_posts', array( $this, 'post_order' ) );
 		\add_filter( 'post_type_link', array( $this, 'redirect_to_parent' ), 10, 2 );
 		\add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
-
 	}
 
 	/**
@@ -218,7 +217,7 @@ class Donor extends Post_Type {
 	 *
 	 * @return void
 	 */
-	public function rewrite_rules() : void {}
+	public function rewrite_rules(): void {}
 
 	/**
 	 * Set Post Order
@@ -246,7 +245,7 @@ class Donor extends Post_Type {
 	 * @param  object \WP_Post $post
 	 * @return string
 	 */
-	function redirect_to_parent( $permalink, $post ) : string {
+	function redirect_to_parent( $permalink, $post ): string {
 		if ( 'donor' === $post->post_type && $post->post_parent ) {
 			$permalink = get_permalink( $post->post_parent );
 		}
@@ -277,12 +276,12 @@ class Donor extends Post_Type {
 	 * @return void
 	 */
 	public function render_meta_box( $post ): void {
-		$post_id              = $post->ID;
-		$parent_obj           = get_post_parent( $post_id );
-		$amount               = get_post_meta( $post_id, 'amount_calc', true );
-		$donor_type           = get_the_term_list( $post_id, 'donor_type' );
-		$parent               = ( ! empty( $parent_obj ) && ! is_wp_error( $parent_obj ) ) ? $parent_obj->post_title : '';
-	
+		$post_id    = $post->ID;
+		$parent_obj = get_post_parent( $post_id );
+		$amount     = get_post_meta( $post_id, 'amount_calc', true );
+		$donor_type = get_the_term_list( $post_id, 'donor_type' );
+		$parent     = ( ! empty( $parent_obj ) && ! is_wp_error( $parent_obj ) ) ? $parent_obj->post_title : '';
+
 		?>
 		<table class="wp-block-table">
 			<thead>
@@ -294,7 +293,7 @@ class Donor extends Post_Type {
 			</thead>
 			<tbody>
 				<tr>
-					<td><?php echo sprintf( '$%s', ( $amount ) ? number_format( $amount ) : '' ); ?></td>
+					<td><?php printf( '$%s', ( $amount ) ? number_format( $amount ) : '' ); ?></td>
 					<td><?php echo $donor_type; ?></td>
 					<td><?php echo $parent_obj->post_title; ?></td>
 				</tr>
@@ -302,5 +301,4 @@ class Donor extends Post_Type {
 		</table>
 		<?php
 	}
-
 }

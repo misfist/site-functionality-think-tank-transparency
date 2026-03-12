@@ -187,11 +187,12 @@ class Think_Tank extends Post_Type {
 				'label'        => __( 'Cumulative Data', 'site-functionality' ),
 				'key'          => 'cumulative_amounts',
 				'single'       => true,
-				'type'         => 'array',
+				'type'         => 'object',
 				'show_in_rest' => array(
 					'schema' => array(
-						'type'  => 'array',
-						'items' => $donor_array,
+						'type'                 => 'object',
+						'properties'           => array_fill_keys( $this->data['donor_types'], array( 'type' => 'string' ) ),
+						'additionalProperties' => array( 'type' => 'string' ),
 					),
 				),
 			),
@@ -334,7 +335,7 @@ class Think_Tank extends Post_Type {
 		$limited_info       = get_post_meta( $post_id, 'limited_info', true );
 		$transparency_score = get_post_meta( $post_id, 'transparency_score', true );
 		$settings           = get_option( 'site_settings' );
-		$unknown_text	   = ( isset( $settings['unknown_amount'] ) ) ? $settings['unknown_amount'] : esc_attr__( 'Unknown Amount', 'site-functionality' );
+		$unknown_text       = ( isset( $settings['unknown_amount'] ) ) ? $settings['unknown_amount'] : esc_attr__( 'Unknown Amount', 'site-functionality' );
 
 		?>
 		<table class="wp-block-table">
@@ -367,5 +368,4 @@ class Think_Tank extends Post_Type {
 		</table>
 		<?php
 	}
-
 }
