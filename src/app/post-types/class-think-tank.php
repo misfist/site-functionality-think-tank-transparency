@@ -187,11 +187,12 @@ class Think_Tank extends Post_Type {
 				'label'        => __( 'Cumulative Data', 'site-functionality' ),
 				'key'          => 'cumulative_amounts',
 				'single'       => true,
-				'type'         => 'array',
+				'type'         => 'object',
 				'show_in_rest' => array(
 					'schema' => array(
-						'type'  => 'array',
-						'items' => $donor_array,
+						'type'                 => 'object',
+						'properties'           => array_fill_keys( $this->data['donor_types'], array( 'type' => 'string' ) ),
+						'additionalProperties' => array( 'type' => 'string' ),
 					),
 				),
 			),
